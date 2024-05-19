@@ -16,7 +16,7 @@
 
   <!-- Perfil activo -->
   
-  <div id="profileStatusMessage"></div>
+  <div id="profileStatusMessage" style="display: none;"></div>
 
   <!-- Perfil de navegación -->
   <h2>Perfiles de Navegación:</h2>
@@ -34,7 +34,10 @@
   <div id="newProfileSection" style="display: none;">
     <input type="text" id="profileNameInput" placeholder="Nombre del Perfil">
     <button id="addNavigationProfileButton">Crear nuevo perfil de navegación</button>
+    <div id="profileError"></div>
   </div>
+
+  
 
   <script src="perfiles.js"></script>
 </body>

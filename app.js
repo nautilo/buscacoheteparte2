@@ -5,6 +5,15 @@ const cors = require('cors');
 const app = express();
 const crypto = require('crypto');
 const PORT = process.env.PORT || 3000;
+const helmet = require('helmet');
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      "script-src": ["'self'", "https://ajax.googleapis.com"]
+    }
+  })
+);
 
 
 app.use(cors()); // Habilitar CORS para todas las solicitudes
@@ -13,7 +22,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
-});
+}); 
 
 mongoose.connect('mongodb://localhost:27017/usuarios', {
   useUnifiedTopology: true,
@@ -27,11 +36,14 @@ mongoose.connection.on('error', console.error.bind(console, 'Error de conexión 
 
 const navigationHistorySchema = new mongoose.Schema({
   title: String,
-  url: String
+  url: String,
+  visitedAt: { type: Date, default: Date.now } // Fecha de la visita
 });
 
 const navigationProfileSchema = new mongoose.Schema({
   name: String,
+  age : { type: Number, default: 0 },
+  password: { type: String, default: null },
   navigationHistory: [navigationHistorySchema],
   blockedWebsites: [String]
 });
@@ -42,7 +54,8 @@ const usuarioSchema = new mongoose.Schema({
   password: String,
    
   navigationProfiles: [navigationProfileSchema],
-   resetPasswordToken: { type: String, default: null } // Establecer un valor predeterminado
+   resetPasswordToken: { type: String, default: null },
+   activeProfileName: { type: String, default: null }
   
 });
 
@@ -91,43 +104,123 @@ app.post('/register', (req, res) => {
     });
 });
 
-// Ruta para agregar un perfil de navegación a un usuario
-app.post('/add-navigation-profile/:username', async (req, res) => {
-  const { name } = req.body;
-  const username = req.params.username;
+app.put('/update-profile/:username/:profileName', async (req, res) => {
+  const { username, profileName } = req.params;
+  const { newName, newAge, newPassword } = req.body;
+  try {
+      const usuario = await Usuario.findOne({ username: username });
+      if (!usuario) {
+          return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+
+      const profile = usuario.navigationProfiles.find(profile => profile.name === profileName);
+      if (!profile) {
+          return res.status(404).json({ message: "Perfil no encontrado" });
+      }
+
+      profile.name = newName;
+      profile.age = parseInt(newAge);
+      profile.password = newPassword;
+      await usuario.save();
+
+      res.status(200).json({ message: "Perfil actualizado exitosamente" });
+  } catch (error) {
+      console.error("Error al actualizar el perfil:", error);
+      res.status(500).json({ message: "Error al actualizar el perfil" });
+  }
+});
+
+
+app.get('/get-profile/:username/:profileName', async (req, res) => {
+  const { username, profileName } = req.params;
 
   try {
     const usuario = await Usuario.findOne({ username: username });
     if (!usuario) {
-      res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-      return;
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
     }
 
-    const existingProfile = usuario.navigationProfiles.find(profile => profile.name === name);
+    const profile = usuario.navigationProfiles.find(profile => profile.name === profileName);
+    if (!profile) {
+      return res.status(404).json({ success: false, message: 'Perfil no encontrado' });
+    }
+
+    res.json({ success: true, profile: profile });
+  } catch (error) {
+    console.error('Error al buscar el perfil:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
+app.post('/add-navigation-profile/:username', async (req, res) => {
+  const { username } = req.params;
+  const { name, age, password } = req.body;
+
+  try {
+    const usuario = await Usuario.findOne({ username: username });
+    if (!usuario) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    // Verificar si ya existe un perfil con el mismo nombre
+    const existingProfile = usuario.navigationProfiles.find(profile => profile.name.toLowerCase() === name.toLowerCase());
     if (existingProfile) {
-      res.status(400).json({ success: false, message: 'Ya existe un perfil de navegación con el mismo nombre' });
-      return;
+      return res.status(409).json({ success: false, message: 'Ya existe un perfil con ese nombre' });
     }
 
+    // Crear el nuevo perfil de navegación
     const newProfile = {
       name: name,
+      age: age,
+      password: password,
       navigationHistory: [],
       blockedWebsites: []
     };
 
+    // Añadir el nuevo perfil al usuario
     usuario.navigationProfiles.push(newProfile);
     await usuario.save();
 
-    res.json({ success: true, message: 'Nuevo perfil de navegación agregado exitosamente' });
+    res.json({ success: true, message: 'Perfil de navegación añadido exitosamente' });
   } catch (error) {
-    console.error('Error al agregar el perfil de navegación:', error);
-    res.status(500).json({ success: false, message: 'Error al agregar el perfil de navegación' });
+    console.error('Error al añadir perfil de navegación:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
+// Ruta para agregar un perfil de navegación a un usuario
+app.post('/add-navigation-history/:username/:profileName', async (req, res) => {
+  const { username, profileName } = req.params;
+  const { title, url } = req.body;
+
+  try {
+    const update = {
+      $push: { 'navigationProfiles.$.navigationHistory': { title, url } }
+    };
+    const options = { new: true };
+    const usuario = await Usuario.findOneAndUpdate(
+      { username: username, 'navigationProfiles.name': profileName },
+      update,
+      options
+    );
+
+    if (!usuario) {
+      return res.status(404).json({ success: false, message: 'Usuario o perfil no encontrado' });
+    }
+
+    res.json({ success: true, message: 'Historial actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error al agregar al historial de navegación:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
   }
 });
 
 // Ruta para obtener todos los perfiles de navegación de un usuario
 app.get('/get-navigation-profiles/:username', async (req, res) => {
   const username = req.params.username;
+  const page = parseInt(req.query.page) || 1; // Obtener el número de página de los parámetros de consulta, por defecto es 1
+  const limit = parseInt(req.query.limit) || 10; // Obtener el límite de elementos por página, por defecto es 10
+  const skip = (page - 1) * limit; // Calcular el número de elementos a omitir
 
   try {
     const usuario = await Usuario.findOne({ username: username });
@@ -136,7 +229,15 @@ app.get('/get-navigation-profiles/:username', async (req, res) => {
       return;
     }
 
-    res.json({ success: true, navigationProfiles: usuario.navigationProfiles });
+    // Filtrar los perfiles de navegación para la paginación
+    const navigationProfiles = usuario.navigationProfiles.slice(skip, skip + limit);
+
+    res.json({
+      success: true,
+      navigationProfiles: navigationProfiles,
+      currentPage: page,
+      totalPages: Math.ceil(usuario.navigationProfiles.length / limit)
+    });
   } catch (error) {
     console.error('Error al obtener perfiles de navegación:', error);
     res.status(500).json({ success: false, message: 'Error al obtener perfiles de navegación' });
@@ -261,10 +362,12 @@ app.post('/set-active-navigation-profile/:username/:profileName', async (req, re
           return;
       }
 
+      // Actualizar el nombre del perfil activo en el documento del usuario
+      usuario.activeProfileName = profileName; // Asumiendo que has añadido este campo al modelo
+      await usuario.save();
+
       // Obtener las URLs bloqueadas del perfil
       const blockedWebsites = profile.blockedWebsites;
-
-      // Aquí podrías realizar otras acciones relacionadas con establecer el perfil como activo
 
       res.json({ success: true, message: 'Perfil establecido como activo', blockedWebsites: blockedWebsites });
   } catch (error) {
@@ -272,6 +375,102 @@ app.post('/set-active-navigation-profile/:username/:profileName', async (req, re
       res.status(500).json({ success: false, message: 'Error al establecer el perfil activo' });
   }
 });
+
+
+app.post('/add-navigation-history/:username/:profileName', async (req, res) => {
+  const { username, profileName } = req.params;
+  const { title, url } = req.body;
+
+  if (!title.trim() || !url.trim()) {
+    return res.status(400).json({ success: false, message: 'Título o URL no pueden estar vacíos' });
+  }
+
+  try {
+    const usuario = await Usuario.findOne({ username: username, 'navigationProfiles.name': profileName });
+    if (!usuario) {
+      return res.status(404).json({ success: false, message: 'Usuario o perfil no encontrado' });
+    }
+
+    const profile = usuario.navigationProfiles.find(profile => profile.name === profileName);
+    // Verificar si la URL ya está en el historial
+    if (profile.navigationHistory.some(history => history.url === url && history.title === title)) {
+      return res.status(409).json({ success: false, message: 'Esta URL ya está en el historial' });
+    }
+
+    profile.navigationHistory.push({ title, url });
+    await usuario.save();
+    res.json({ success: true, message: 'Historial actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error al agregar al historial de navegación:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+// Ruta para obtener el historial de navegación de un perfil
+app.get('/get-navigation-history/:username/:profileName', async (req, res) => {
+  const { username, profileName } = req.params;
+  const page = parseInt(req.query.page) || 1; // Número de página, por defecto es 1
+  const limit = parseInt(req.query.limit) || 10; // Cantidad de elementos por página, por defecto es 10
+  const skip = (page - 1) * limit; // Cálculo de cuántos elementos omitir
+
+  try {
+    const usuario = await Usuario.findOne({ username: username, 'navigationProfiles.name': profileName });
+    if (!usuario) {
+      return res.status(404).json({ success: false, message: 'Usuario o perfil no encontrado' });
+    }
+
+    const profile = usuario.navigationProfiles.find(profile => profile.name === profileName);
+    if (!profile) {
+      return res.status(404).json({ success: false, message: 'Perfil no encontrado' });
+    }
+
+    // Aplicar paginación al historial de navegación
+    const paginatedItems = profile.navigationHistory.slice(skip, skip + limit);
+    const totalCount = profile.navigationHistory.length;
+
+    res.json({
+      success: true,
+      navigationHistory: paginatedItems,
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit),
+      totalCount: totalCount
+    });
+  } catch (error) {
+    console.error('Error al obtener el historial de navegación:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
+// Ruta para eliminar una visita del historial de navegación de un perfil
+app.delete('/delete-navigation-history/:username/:profileName/:url', async (req, res) => {
+  const { username, profileName, url } = req.params;
+
+  try {
+    const usuario = await Usuario.findOne({ username: username });
+    if (!usuario) {
+      res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+      return;
+    }
+
+    const profile = usuario.navigationProfiles.find(profile => profile.name === profileName);
+    if (!profile) {
+      res.status(404).json({ success: false, message: 'Perfil no encontrado' });
+      return;
+    }
+
+    // Eliminar la visita del historial de navegación del perfil
+    profile.navigationHistory = profile.navigationHistory.filter(history => history.url !== url);
+    await usuario.save();
+
+    res.json({ success: true, message: 'Visita eliminada del historial de navegación' });
+  } catch (error) {
+    console.error('Error al eliminar visita del historial de navegación:', error);
+    res.status(500).json({ success: false, message: 'Error al eliminar visita del historial de navegación' });
+  }
+});
+
+
+
+
 
 // Ruta para desbloquear una URL
 app.post('/unblock-website/:username/:profileName', async (req, res) => {
@@ -376,6 +575,7 @@ app.post('/reset-password/:token', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
+
 
 
 

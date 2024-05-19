@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
   <title>Panel de Bloqueo</title>
   <link rel="stylesheet" href="panel.css">
 </head>
@@ -21,10 +22,30 @@
   <!-- Formulario para agregar una nueva URL bloqueada -->
   <form id="addBlockedUrlForm">
     <input type="text" id="blockedUrlInput" placeholder="URL a bloquear">
-    <button type="submit">Bloquear URL</button>
+    <button type="submit" id="bloquearUrlBtn">Bloquear URL</button>
   </form>
+
+<!-- Sección para buscar URLs por tema -->
+<div id="searchSection">
+  <input type="text" id="searchInput" placeholder="Ingrese un tema para buscar">
+  <button id="searchButton">Buscar</button>
+</div>
+
+<!-- Sección para mostrar los resultados -->
+<div id="searchResults"></div>
+  
+  
+
+  <div id="navigationHistoryPanel">
+    <h2>Historial de Navegación</h2>
+    <div id="navigationHistoryContainer"></div>
+    <div id="paginationContainer"></div>
+</div>
+
+
 
   <!-- Script para manejar la lógica de la página -->
   <script src="panel.js"></script>
+  
 </body>
 </html>

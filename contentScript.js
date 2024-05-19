@@ -5,11 +5,12 @@ console.log("El contentScript se está ejecutando.");
 // Obtener las reglas de bloqueo del almacenamiento sincronizado
 chrome.storage.sync.get('blockedWebsites', function(data) {
     const blockedWebsites = data.blockedWebsites || []; // Obtener el array de sitios bloqueados
-
     console.log("Urls bloqueadas recibidas:", blockedWebsites);
 
     // Verificar si la página debe ser bloqueada
     const url = window.location.href; // Obtener la URL actual
+    console.log("URL actual:", url);
+
     const blocked = isUrlBlocked(url, blockedWebsites); // Verificar si la URL está bloqueada
     console.log("¿Está bloqueada la página?", blocked);
 
@@ -20,16 +21,15 @@ chrome.storage.sync.get('blockedWebsites', function(data) {
 
 // Función para verificar si la URL está bloqueada
 function isUrlBlocked(url, blockedWebsites) {
-    console.log("Comprobando si la URL está bloqueada...");
-    console.log("Urls bloqueadas:", blockedWebsites);
-
     return blockedWebsites.some(website => {
-        // Verificar si la URL coincide con algún patrón de bloqueo
-        const regex = new RegExp(website.replace(/\*/g, '.*'));
-        console.log("Regex:", regex);
-
+        const regex = new RegExp('^(https?:\/\/)?(www\.)?' + escapeRegExp(website) + '.*$', 'i');
         return regex.test(url);
     });
+}
+
+// Función para escapar caracteres especiales en las expresiones regulares
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& significa la cadena completa que coincide
 }
 
 // Función para bloquear la página

@@ -102,3 +102,67 @@ function getSyncData() {
         });
     });
 }
+
+// Escuchar eventos de navegación completados
+chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) {
+    if (details.frameId === 0) {
+        chrome.history.addUrl({url: details.url}, function() {
+            console.log(`URL añadida al historial: ${details.url}`);
+        });
+    }
+});
+
+
+chrome.storage.sync.get("currentUser", function(data) {
+    const currentUser = data.currentUser;
+    if (currentUser) {
+        console.log("Usuario actual recuperado:", currentUser);
+        // Puedes continuar con la lógica que depende del nombre de usuario aquí
+    } else {
+        console.error("No se pudo recuperar el nombre de usuario.");
+    }
+});
+
+chrome.runtime.onStartup.addListener(() => {
+    registerWebNavigationListeners();
+});
+
+// Escuchar eventos de navegación antes de que la página comience a cargar
+// Escuchar eventos de navegación antes de que la página comience a cargar
+// Escuchar eventos de navegación antes de que la página comience a cargar
+chrome.webNavigation.onBeforeNavigate.addListener(function(details) {
+    if (details.frameId === 0) {
+      chrome.storage.sync.get(['currentUser', 'activeProfileName'], function(data) {
+        const username = data.currentUser;
+        const profileName = data.activeProfileName;
+
+        console.log("Username:", username); // Log inside the callback
+        console.log("Profile Name:", profileName); // Corrected variable name
+
+        if (!username || !profileName) {
+          console.error('Usuario o perfil no encontrado');
+          return; // Salir si no hay datos válidos
+        }
+
+        fetch(`http://localhost:3000/add-navigation-history/${username}/${profileName}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer YOUR_AUTH_TOKEN'
+          },
+          body: JSON.stringify({
+            title: 'Título de la página', // Asegúrate de obtener el título de alguna manera, si es necesario
+            url: details.url
+          })
+        }).then(response => response.json())
+          .then(data => {
+            if (!data.success) {
+              console.error('Error al enviar URL:', data.message);
+              return; // No continuar si la operación no fue exitosa
+            }
+            console.log('URL añadida al historial:', details.url);
+          })
+          .catch(error => console.error('Error al enviar URL:', error));
+      });
+    }
+  }, {url: [{urlMatches : 'http://*/*'}, {urlMatches : 'https://*/*'}]});

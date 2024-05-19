@@ -3,13 +3,19 @@ async function getCurrentUser() {
     return localStorage.getItem('currentUser');
 }
 
-// Función para guardar el nombre de usuario actual en el almacenamiento
-function saveCurrentUser(username, callback) {
-    chrome.storage.sync.set({ "currentUser": username }, function() {
-        console.log("Usuario actual guardado:", username);
-        if (callback && typeof callback === 'function') {
-            callback();
-        }
+
+// Función para guardar el nombre de usuario actual en el almacenamiento sincronizado de Chrome
+function saveCurrentUser(username) {
+    return new Promise((resolve, reject) => {
+        chrome.storage.sync.set({ "currentUser": username }, function() {
+            if (chrome.runtime.lastError) {
+                console.error("Error al guardar el nombre de usuario:", chrome.runtime.lastError);
+                reject(chrome.runtime.lastError);
+            } else {
+                console.log("Nombre de usuario guardado exitosamente:", username);
+                resolve();
+            }
+        });
     });
 }
 
@@ -97,17 +103,17 @@ async function showActiveProfile() {
     const activeProfileNameElement = document.getElementById("activeProfileName");
 
     if (activeProfileNameElement) {
-        const currentUser = await getCurrentUser();
-        const activeProfile = await getActiveProfile(currentUser);
+        chrome.storage.local.get("activeProfile", function(data) {
+            const activeProfile = data.activeProfile;
 
-        if (activeProfile && activeProfile.username) {
-            activeProfileNameElement.textContent = activeProfile.username;
-            console.log("Perfil activo encontrado:", activeProfile);
-            console.log("URLs bloqueadas del perfil activo (almacenamiento sincronizado):", activeProfile.blockedWebsitesArray);
-        } else {
-            activeProfileNameElement.textContent = "Ninguno";
-            console.log("No hay ningún perfil activo.");
-        }
+            if (activeProfile && activeProfile.name) {
+                activeProfileNameElement.textContent = activeProfile.name;
+                console.log("Perfil activo encontrado:", activeProfile);
+            } else {
+                activeProfileNameElement.textContent = "Ninguno"; // Si no hay perfil activo, muestra "Ninguno"
+                console.log("No hay ningún perfil activo.");
+            }
+        });
     } else {
         console.error("El elemento 'activeProfileName' no fue encontrado en el DOM.");
     }
@@ -129,9 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.getElementById('loginForm').addEventListener('submit', async function(event) {
     event.preventDefault(); // Evitar el envío del formulario por defecto
 
-    const username = document.getElementById('username').value; // Obtener el valor del campo de nombre de usuario
-    console.log('Valor del campo de nombre de usuario:', username); // Agregar un console.log para depurar
-
+    const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
     fetch('http://localhost:3000/login', {
@@ -144,6 +148,17 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     .then(response => response.json())
     .then(async function(data) {
         if (data.success) {
+            // Guardar el nombre de usuario en el almacenamiento local
+            await saveCurrentUser(username);
+
+            // Suponiendo que obtienes el perfil activo del usuario desde la respuesta del servidor
+            const activeProfile = data.activeProfile; // Asegúrate de que el servidor envíe esta información
+
+            // Guardar el perfil activo en el almacenamiento local
+            chrome.storage.sync.set({ "activeProfile": activeProfile }, function() {
+                console.log("Perfil activo guardado:", activeProfile);
+            });
+
             // Redirigir a perfiles.html después de iniciar sesión exitosamente
             window.open(`perfiles.html?user=${username}&currentUser=${username}`, '_blank');
         } else {
