@@ -82,24 +82,39 @@ app.post('/login', (req, res) => {
 
 app.post('/register', (req, res) => {
   const { username, email, password } = req.body;
-  Usuario.findOne({ username: username })
-    .then(usuarioExistente => {
-      if (usuarioExistente) {
-        res.status(400).json({ success: false, message: 'El usuario ya existe' });
+
+  // Primero verifica si el email ya está registrado
+  Usuario.findOne({ email: email })
+    .then(usuarioPorEmail => {
+      if (usuarioPorEmail) {
+        res.status(400).json({ success: false, message: 'Email ya registrado' });
       } else {
-        const nuevoUsuario = new Usuario({ username: username, email: email, password: password });
-        nuevoUsuario.save()
-          .then(() => {
-            res.json({ success: true, message: '¡Usuario registrado exitosamente!' });
+        // Si el email no está registrado, verifica si el nombre de usuario ya existe
+        Usuario.findOne({ username: username })
+          .then(usuarioExistente => {
+            if (usuarioExistente) {
+              res.status(400).json({ success: false, message: 'El usuario ya existe' });
+            } else {
+              // Si ni el email ni el usuario están registrados, crea el nuevo usuario
+              const nuevoUsuario = new Usuario({ username: username, email: email, password: password });
+              nuevoUsuario.save()
+                .then(() => {
+                  res.json({ success: true, message: '¡Usuario registrado exitosamente!' });
+                })
+                .catch(error => {
+                  console.error('Error al guardar nuevo usuario:', error);
+                  res.status(500).json({ success: false, message: 'Error en el servidor' });
+                });
+            }
           })
           .catch(error => {
-            console.error('Error al guardar nuevo usuario:', error);
+            console.error('Error al buscar usuario existente:', error);
             res.status(500).json({ success: false, message: 'Error en el servidor' });
           });
       }
     })
     .catch(error => {
-      console.error('Error al buscar usuario existente:', error);
+      console.error('Error al verificar el email:', error);
       res.status(500).json({ success: false, message: 'Error en el servidor' });
     });
 });
