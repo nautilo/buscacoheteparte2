@@ -130,25 +130,28 @@ chrome.runtime.onStartup.addListener(() => {
 // Escuchar eventos de navegación antes de que la página comience a cargar
 // Escuchar eventos de navegación antes de que la página comience a cargar
 // Escuchar eventos de navegación antes de que la página comience a cargar
+// Escuchar eventos de navegación antes de que la página comience a cargar
 chrome.webNavigation.onBeforeNavigate.addListener(function(details) {
     if (details.frameId === 0) {
+      // Recuperar datos del usuario y el nombre del perfil activo
       chrome.storage.sync.get(['currentUser', 'activeProfileName'], function(data) {
         const username = data.currentUser;
-        const profileName = data.activeProfileName;
+        const profileName = data.activeProfileName; // Asegúrate de que esta clave coincide con cómo guardas el nombre del perfil activo
 
-        console.log("Username:", username); // Log inside the callback
-        console.log("Profile Name:", profileName); // Corrected variable name
+        console.log("Username:", username);
+        console.log("Active Profile Name:", profileName);
 
         if (!username || !profileName) {
           console.error('Usuario o perfil no encontrado');
           return; // Salir si no hay datos válidos
         }
 
+        // Usar el perfil activo para añadir historial de navegación
         fetch(`http://localhost:3000/add-navigation-history/${username}/${profileName}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer YOUR_AUTH_TOKEN'
+            'Authorization': 'Bearer YOUR_AUTH_TOKEN' // Asegúrate de reemplazar esto con tu token real
           },
           body: JSON.stringify({
             title: 'Título de la página', // Asegúrate de obtener el título de alguna manera, si es necesario

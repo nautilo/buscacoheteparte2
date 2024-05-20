@@ -28,26 +28,24 @@ function showError(mensaje) {
 
 // Función para enviar la solicitud al servidor
 function enviarDatos(password) {
-  var token = getTokenFromUrl(); // Obtener el token de la URL
-  console.log("Token obtenido:", token); // Agregamos un console.log para verificar el token obtenido
+  var token = encodeURIComponent(getTokenFromUrl());
+  console.log("Token codificado para enviar:", token);
 
-  fetch(`http://localhost:3000/reset-password/${token}`, { // Envía la solicitud al servidor en el puerto 3000
+  fetch(`http://localhost:3000/reset-password/${token}`, {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ password: password, token: token }) // Enviar la contraseña y el token en el cuerpo de la solicitud
+      body: JSON.stringify({ password: password }) // Solo enviar la contraseña aquí
   })
   .then(response => {
-      console.log("Status de la respuesta:", response.status); // Agregamos un console.log para verificar el status de la respuesta
+      console.log("Status de la respuesta:", response.status);
       if (!response.ok) {
           throw new Error('Error al enviar datos al servidor');
       }
       return response.json();
   })
   .then(data => {
-      // Muestra un mensaje de éxito si la solicitud fue exitosa
-      console.log("Datos recibidos del servidor:", data); // Agregamos un console.log para verificar los datos recibidos
       if (data.success) {
           showSuccess(data.message);
       } else {
@@ -55,7 +53,6 @@ function enviarDatos(password) {
       }
   })
   .catch(error => {
-      // Muestra un mensaje de error si hubo algún problema con la solicitud
       console.error('Error al enviar datos al servidor:', error);
       showError('Error al enviar datos al servidor. Inténtalo de nuevo más tarde.');
   });

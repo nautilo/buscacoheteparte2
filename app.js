@@ -539,35 +539,41 @@ app.post('/forgot-password', (req, res) => {
 app.post('/reset-password/:token', (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
-  
-  console.log("Token recibido en el servidor:", token); // Agrega este console.log para verificar el token recibido
-  console.log("Contraseña recibida en el servidor:", password); // Agrega este console.log para verificar la contraseña recibida
 
-  Usuario.findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } })
+  console.log("Token recibido en el servidor:", token);
+  console.log("Contraseña recibida en el servidor:", password);
+
+  // Añadir impresión de la fecha y hora actual para verificar problemas de sincronización
+  const now = new Date();
+  console.log("Fecha y hora actual del servidor:", now);
+
+  Usuario.findOne({ resetPasswordToken: token, resetPasswordExpiration: { $gt: now } })
     .then(usuario => {
       if (!usuario) {
+        console.log("Token proporcionado:", token);
+        console.log("Fecha y hora actual para comparación:", now);
         console.log("No se encontró ningún usuario con el token proporcionado o el token ha expirado.");
         return res.status(400).json({ success: false, message: 'El enlace de restablecimiento es inválido o ha expirado' });
       }
 
-      // Actualizar la contraseña y borrar el token de restablecimiento
+      console.log("Usuario encontrado:", usuario.username); // Añadir impresión del nombre de usuario encontrado
+
       usuario.password = password;
       usuario.resetPasswordToken = undefined;
-      usuario.resetPasswordExpires = undefined;
+      usuario.resetPasswordExpiration = undefined;
 
-      // Guardar cambios en la base de datos
       usuario.save()
         .then(() => {
-          console.log("Contraseña restablecida correctamente.");
+          console.log("Contraseña restablecida correctamente para el usuario:", usuario.username);
           res.json({ success: true, message: 'Contraseña restablecida exitosamente' });
         })
         .catch(error => {
-          console.error('Error al guardar los cambios en la base de datos:', error); // Agrega este console.error para identificar errores en el guardado del usuario
+          console.error('Error al guardar los cambios en la base de datos:', error);
           res.status(500).json({ success: false, message: 'Error al guardar los cambios en la base de datos' });
         });
     })
     .catch(error => {
-      console.error('Error al buscar usuario:', error); // Agrega este console.error para identificar errores en la búsqueda del usuario
+      console.error('Error al buscar usuario con token:', error);
       res.status(500).json({ success: false, message: 'Error al buscar usuario en la base de datos' });
     });
 });
