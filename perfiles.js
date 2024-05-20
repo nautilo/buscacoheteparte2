@@ -8,7 +8,7 @@ async function getCurrentUser() {
             resolve(username); // Si el nombre de usuario está en los parámetros de la URL, devolverlo
         } else {
             // Obtener el nombre de usuario del almacenamiento local
-            chrome.storage.local.get('username', function(data) {
+            chrome.storage.local.get('username', function (data) {
                 const storedUsername = data['username'];
                 if (storedUsername) {
                     resolve(storedUsername); // Si se encuentra en el almacenamiento local, devolverlo
@@ -20,11 +20,7 @@ async function getCurrentUser() {
     });
 }
 
-// Función para obtener el perfil activo
 
-
-// Función para mostrar el mensaje de bienvenida con el perfil activo
-// Función para mostrar el mensaje de bienvenida con el perfil activo
 // Función para mostrar el mensaje de bienvenida con el perfil activo
 async function showWelcomeMessage() {
     const welcomeMessageElement = document.getElementById("welcomeMessage");
@@ -47,7 +43,7 @@ async function showWelcomeMessage() {
 // Función para definir y guardar el nombre de usuario en el almacenamiento local de Chrome
 async function setCurrentUser(username) {
     return new Promise((resolve, reject) => {
-        chrome.storage.local.set({ 'username': username }, function() {
+        chrome.storage.local.set({ 'username': username }, function () {
             if (chrome.runtime.lastError) {
                 console.error("Error al guardar el nombre de usuario:", chrome.runtime.lastError);
                 reject(chrome.runtime.lastError);
@@ -62,7 +58,7 @@ async function setCurrentUser(username) {
 async function getCurrentUserAndProfile() {
     try {
         const user = await new Promise((resolve, reject) => {
-            chrome.storage.local.get('username', function(data) {
+            chrome.storage.local.get('username', function (data) {
                 if (chrome.runtime.lastError) {
                     reject(chrome.runtime.lastError);
                 } else {
@@ -72,7 +68,7 @@ async function getCurrentUserAndProfile() {
         });
 
         const profile = await new Promise((resolve, reject) => {
-            chrome.storage.local.get('activeProfile', function(data) {
+            chrome.storage.local.get('activeProfile', function (data) {
                 if (chrome.runtime.lastError) {
                     reject(chrome.runtime.lastError);
                 } else {
@@ -95,21 +91,11 @@ async function getCurrentUserAndProfile() {
     }
 }
 
-function viewSyncStorage() {
-    chrome.storage.sync.get(null, function(items) { // null para obtener todos los elementos
-        console.log(items);
-    });
-}
 
-function clearSyncStorage() {
-    chrome.storage.sync.clear(function() {
-        console.log('Todos los elementos han sido eliminados correctamente.');
-    });
-}
 
 async function getCurrentUsernameFromStorage() {
     return new Promise(resolve => {
-        chrome.storage.sync.get("currentUser", function(data) {
+        chrome.storage.sync.get("currentUser", function (data) {
             const username = data.currentUser;
             console.log("Nombre de usuario recuperado del almacenamiento:", username);
             resolve(username);
@@ -121,7 +107,7 @@ async function getCurrentUsernameFromStorage() {
 async function setUserActiveProfile(currentUser, profile) {
     try {
         // Primero, eliminar el perfil activo actual si existe
-        await chrome.storage.local.remove("activeProfile", async function() {
+        await chrome.storage.local.remove("activeProfile", async function () {
             console.log("Perfil activo anterior eliminado.");
 
             // Luego, establecer el nuevo perfil activo
@@ -131,22 +117,22 @@ async function setUserActiveProfile(currentUser, profile) {
             const data = await response.json();
             if (data.success) {
                 // Almacenar el nuevo perfil activo en el almacenamiento local de Chrome
-                await chrome.storage.local.set({ "activeProfile": profile }, function() {
+                await chrome.storage.local.set({ "activeProfile": profile }, function () {
                     console.log("Nuevo perfil activo guardado en el almacenamiento local:", profile.name);
                 });
 
                 // Almacenar las URLs bloqueadas en el almacenamiento sincronizado de Chrome
-                chrome.storage.sync.set({ blockedWebsites: data.blockedWebsites }, function() {
+                chrome.storage.sync.set({ blockedWebsites: data.blockedWebsites }, function () {
                     console.log("URLs bloqueadas guardadas en el almacenamiento sincronizado de Chrome");
                 });
 
-                
-                
+
+
 
                 // Llamar a showWelcomeMessage para actualizar el mensaje de bienvenida
                 await showWelcomeMessage();
 
-                
+
 
                 return true;
             } else {
@@ -160,14 +146,14 @@ async function setUserActiveProfile(currentUser, profile) {
 }
 
 async function verifyAndUpdateActiveProfileName() {
-    chrome.storage.sync.get(['activeProfile', 'activeProfileName'], function(data) {
+    chrome.storage.sync.get(['activeProfile', 'activeProfileName'], function (data) {
         const activeProfile = data.activeProfile;
         const activeProfileName = data.activeProfileName;
 
         if (activeProfile && activeProfile.name !== activeProfileName) {
             console.error('Discrepancia detectada en el nombre del perfil activo.');
             // Corregir el activeProfileName para que coincida con el nombre del perfil activo
-            chrome.storage.sync.set({activeProfileName: activeProfile.name}, function() {
+            chrome.storage.sync.set({ activeProfileName: activeProfile.name }, function () {
                 console.log(`activeProfileName actualizado a: ${activeProfile.name}`);
             });
         } else {
@@ -180,17 +166,22 @@ async function verifyAndUpdateActiveProfileName() {
 verifyAndUpdateActiveProfileName();
 
 function viewSyncStorage() {
-    chrome.storage.sync.get(null, function(items) { // null aquí significa obtener todos los elementos
+    chrome.storage.sync.get(null, function (items) { // null aquí significa obtener todos los elementos
         console.log('Items in sync storage:', items);
     });
 }
 
 async function getActiveProfileFromStorage() {
     return new Promise(resolve => {
-        chrome.storage.local.get("activeProfile", function(data) {
+        chrome.storage.local.get("activeProfile", function (data) {
             const activeProfile = data.activeProfile;
-            console.log("Perfil activo recuperado del almacenamiento:", activeProfile);
-            resolve(activeProfile);
+            if (activeProfile) {
+                console.log("Perfil activo recuperado del almacenamiento:", activeProfile);
+                resolve(activeProfile);
+            } else {
+                console.log("No hay perfil activo.");
+                resolve("No hay perfil activo.");
+            }
         });
     });
 }
@@ -198,7 +189,7 @@ async function getActiveProfileFromStorage() {
 
 async function captureNavigationHistory(profile) {
     // Lógica para capturar el historial de navegación
-    chrome.history.search({text: '', maxResults: 1000}, function(data) {
+    chrome.history.search({ text: '', maxResults: 1000 }, function (data) {
         // `data` contiene un array de objetos con la información del historial
         // Por cada objeto, puedes extraer la información relevante como URL y título
         // y agregarla al historial de navegación del perfil activo
@@ -211,7 +202,7 @@ async function captureNavigationHistory(profile) {
         });
 
         // Obtener el historial existente del almacenamiento local
-        chrome.storage.local.get("navigationHistory", function(result) {
+        chrome.storage.local.get("navigationHistory", function (result) {
             let existingNavigationHistory = result.navigationHistory || [];
 
             // Combinar historiales
@@ -225,8 +216,8 @@ async function captureNavigationHistory(profile) {
             );
 
             // Guardar el historial combinado en el almacenamiento local
-            chrome.storage.local.set({ "navigationHistory": combinedHistory }, function() {
-                
+            chrome.storage.local.set({ "navigationHistory": combinedHistory }, function () {
+
             });
         });
     });
@@ -236,7 +227,7 @@ async function captureNavigationHistory(profile) {
 // Función para obtener el perfil activo desde el almacenamiento local de Chrome
 
 // Listener para el evento 'DOMContentLoaded' que se ejecuta cuando el DOM ha sido completamente cargado
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     // Llama a la función para obtener y mostrar el perfil activo al cargar la página
     const activeProfile = await getActiveProfileFromStorage();
     if (activeProfile) {
@@ -248,14 +239,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function clearBlockingRules() {
-    chrome.declarativeNetRequest.getDynamicRules(function(rules) {
+    chrome.declarativeNetRequest.getDynamicRules(function (rules) {
         const ruleIds = rules.map(rule => rule.id); // Obtener los IDs de todas las reglas
         if (ruleIds.length > 0) {
             // Eliminar todas las reglas de bloqueo
             chrome.declarativeNetRequest.updateDynamicRules({
                 removeRuleIds: ruleIds, // IDs de las reglas a eliminar
                 addRules: [] // No hay reglas para agregar
-            }, function() {
+            }, function () {
                 console.log("Todas las reglas de bloqueo han sido eliminadas.");
             });
         } else {
@@ -265,10 +256,10 @@ function clearBlockingRules() {
 }
 
 function getActiveBlockingRules(callback) {
-    chrome.declarativeNetRequest.getDynamicRules(function(rules) {
+    chrome.declarativeNetRequest.getDynamicRules(function (rules) {
         // Filtrar solo las reglas de bloqueo (acción 'block')
         const blockingRules = rules.filter(rule => rule.action.type === "block");
-        
+
         // Verificar si se proporcionó una función de devolución de llamada
         if (typeof callback === "function") {
             callback(blockingRules); // Llamar a la función de devolución de llamada con las reglas
@@ -283,22 +274,22 @@ function getActiveBlockingRules(callback) {
 
 
 function getBlockingRules() {
-    chrome.declarativeNetRequest.getDynamicRules(function(rules) {
+    chrome.declarativeNetRequest.getDynamicRules(function (rules) {
         console.log("Reglas de bloqueo actuales:");
         console.log(rules);
     });
 }
 
 function limpiarSyncStorage() {
-    chrome.storage.sync.clear(function() {
-      console.log('Todos los elementos han sido eliminados correctamente.');
+    chrome.storage.sync.clear(function () {
+        console.log('Todos los elementos han sido eliminados correctamente.');
     });
-  }
-  
+}
+
 
 function mostrarSyncStorage() {
     // Obtener el contenido del almacenamiento sincronizado
-    chrome.storage.sync.get(null, function(items) {
+    chrome.storage.sync.get(null, function (items) {
         // Verificar si hay algún error
         if (chrome.runtime.lastError) {
             console.error("Error al obtener el almacenamiento sincronizado:", chrome.runtime.lastError);
@@ -318,7 +309,7 @@ async function showNavigationProfiles() {
 
     try {
         const navigationProfiles = await getNavigationProfiles(currentUser);
-        
+
         // Verificar si hay perfiles de navegación
         if (navigationProfiles.length === 0) {
             navigationProfilesMessage.textContent = "No hay perfiles de navegación disponibles.";
@@ -333,65 +324,65 @@ async function showNavigationProfiles() {
             profileItem.textContent = profile.name;
 
             // Botones para cada perfil
-const setAsActiveButton = document.createElement("button");
-setAsActiveButton.textContent = "Establecer como activo";
-setAsActiveButton.addEventListener("click", async function() {
-    try {
-        await setUserActiveProfile(currentUser, profile); // Establecer como activo
-        console.log("Perfil activo establecido exitosamente.");
+            const setAsActiveButton = document.createElement("button");
+            setAsActiveButton.textContent = "Establecer como activo";
+            setAsActiveButton.addEventListener("click", async function () {
+                try {
+                    await setUserActiveProfile(currentUser, profile); // Establecer como activo
+                    console.log("Perfil activo establecido exitosamente.");
 
-        // Primero, eliminar el nombre del perfil activo anterior del almacenamiento sincronizado
-        chrome.storage.sync.remove('activeProfileName', function() {
-            if (chrome.runtime.lastError) {
-                console.error("Error al eliminar el nombre del perfil activo anterior:", chrome.runtime.lastError);
-            } else {
-                console.log("Nombre del perfil activo anterior eliminado correctamente.");
+                    // Primero, eliminar el nombre del perfil activo anterior del almacenamiento sincronizado
+                    chrome.storage.sync.remove('activeProfileName', function () {
+                        if (chrome.runtime.lastError) {
+                            console.error("Error al eliminar el nombre del perfil activo anterior:", chrome.runtime.lastError);
+                        } else {
+                            console.log("Nombre del perfil activo anterior eliminado correctamente.");
 
-                // Luego, guardar el nuevo nombre del perfil activo en el almacenamiento sincronizado
-                chrome.storage.sync.set({ 'activeProfileName': profile.name }, function() {
-                    if (chrome.runtime.lastError) {
-                        console.error("Error al guardar el nombre del perfil activo:", chrome.runtime.lastError);
-                    } else {
-                        console.log("Nombre del perfil activo guardado en el almacenamiento sincronizado:", profile.name);
+                            // Luego, guardar el nuevo nombre del perfil activo en el almacenamiento sincronizado
+                            chrome.storage.sync.set({ 'activeProfileName': profile.name }, function () {
+                                if (chrome.runtime.lastError) {
+                                    console.error("Error al guardar el nombre del perfil activo:", chrome.runtime.lastError);
+                                } else {
+                                    console.log("Nombre del perfil activo guardado en el almacenamiento sincronizado:", profile.name);
+                                }
+                            });
+                        }
+                    });
+
+                    const activeProfileMessage = document.getElementById("activeProfileMessage");
+                    if (activeProfileMessage) {
+                        await showActiveProfile(); // Mostrar el perfil activo actualizado
                     }
-                });
-            }
-        });
-
-        const activeProfileMessage = document.getElementById("activeProfileMessage");
-        if (activeProfileMessage) {
-            await showActiveProfile(); // Mostrar el perfil activo actualizado
-        }
-    } catch (error) {
-        console.error("Error al establecer el perfil activo:", error);
-        alert("Error al establecer el perfil activo. Inténtalo de nuevo más tarde.");
-    }
-});
+                } catch (error) {
+                    console.error("Error al establecer el perfil activo:", error);
+                    alert("Error al establecer el perfil activo. Inténtalo de nuevo más tarde.");
+                }
+            });
 
             const editButton = document.createElement("button");
-editButton.textContent = "Editar";
-editButton.addEventListener("click", async function() {
-    const newName = prompt("Ingrese el nuevo nombre para el perfil:", profile.name);
-    if (newName !== null) {
-        const newAge = prompt("Ingrese la nueva edad para el perfil:", profile.age);
-        if (newAge !== null) {
-            const newPassword = prompt("Ingrese la nueva contraseña para el perfil:");
-            if (newPassword !== null) {
-                try {
-                    await updateProfile(currentUser, profile.name, newName, newAge, newPassword); // Editar el perfil
-                    await showNavigationProfiles(); // Actualizar la lista de perfiles
-                } catch (error) {
-                    console.error("Error al editar el perfil:", error);
-                    alert("Error al editar el perfil. Inténtalo de nuevo más tarde.");
+            editButton.textContent = "Editar";
+            editButton.addEventListener("click", async function () {
+                const newName = prompt("Ingrese el nuevo nombre para el perfil:", profile.name);
+                if (newName !== null) {
+                    const newAge = prompt("Ingrese la nueva edad para el perfil:", profile.age);
+                    if (newAge !== null) {
+                        const newPassword = prompt("Ingrese la nueva contraseña para el perfil:");
+                        if (newPassword !== null) {
+                            try {
+                                await updateProfile(currentUser, profile.name, newName, newAge, newPassword); // Editar el perfil
+                                await showNavigationProfiles(); // Actualizar la lista de perfiles
+                            } catch (error) {
+                                console.error("Error al editar el perfil:", error);
+                                alert("Error al editar el perfil. Inténtalo de nuevo más tarde.");
+                            }
+                        }
+                    }
                 }
-            }
-        }
-    }
-});
+            });
 
             const deleteButton = document.createElement("button");
             deleteButton.textContent = "Eliminar";
-            deleteButton.addEventListener("click", async function() {
+            deleteButton.addEventListener("click", async function () {
                 if (confirm("¿Estás seguro de que deseas eliminar este perfil?")) {
                     try {
                         await deleteNavigationProfile(currentUser, profile.name); // Eliminar el perfil
@@ -405,7 +396,7 @@ editButton.addEventListener("click", async function() {
 
             const goToBlockPanelButton = document.createElement("button");
             goToBlockPanelButton.textContent = "Ir a panel de bloqueo";
-            goToBlockPanelButton.addEventListener("click", async function() {
+            goToBlockPanelButton.addEventListener("click", async function () {
                 const currentUser = await getCurrentUser(); // Obtener el usuario actual
                 if (currentUser) {
                     window.open(`panel.html?username=${currentUser}&profile=${profile.name}`, '_blank');
@@ -523,6 +514,21 @@ async function deleteNavigationProfile(username, profileName) {
 // Función para agregar un nuevo perfil de navegación asegurándose de que no exista otro con el mismo nombre
 async function addNavigationProfile(username, profileName) {
     try {
+        // Primero, verifica si ya existe un perfil con el mismo nombre para evitar hacer la petición si no es necesario
+        const existingProfiles = await getNavigationProfiles(username);
+        const isDuplicate = existingProfiles.some(profile => profile.name === profileName);
+
+        if (isDuplicate) {
+            chrome.notifications.create({
+                type: 'basic',
+                iconUrl: 'icon.png', // Asegúrate de tener un icono válido aquí
+                title: 'Error de Duplicado',
+                message: 'No puedes tener 2 perfiles de navegación con el mismo nombre.'
+            });
+            return false; // Detener la ejecución si el perfil ya existe
+        }
+
+        // Si no hay duplicados, procede a agregar el nuevo perfil
         const response = await fetch(`http://localhost:3000/add-navigation-profile/${username}`, {
             method: 'POST',
             headers: {
@@ -531,53 +537,65 @@ async function addNavigationProfile(username, profileName) {
             body: JSON.stringify({ name: profileName })
         });
         const data = await response.json();
-        if (data.success) {
+
+        if (response.ok) {
             console.log("Nuevo perfil de navegación agregado exitosamente.");
-            document.getElementById('profileError').textContent = ''; // Limpiar mensajes de error anteriores
+            chrome.notifications.create({
+                type: 'basic',
+                iconUrl: 'icon.png',
+                title: 'Perfil Agregado',
+                message: 'Nuevo perfil de navegación agregado exitosamente.'
+            });
             return true;
         } else {
-            // Manejar la respuesta cuando el nombre del perfil ya existe
-            if (response.status === 409) {
-                document.getElementById('profileError').textContent = "No puedes tener 2 perfiles de navegación con el mismo nombre.";
-            } else {
-                document.getElementById('profileError').textContent = data.message;
-            }
             throw new Error(data.message);
         }
     } catch (error) {
         console.error("Error al agregar un nuevo perfil de navegación:", error);
-        document.getElementById('profileError').textContent = "Error al agregar un nuevo perfil de navegación: " + error.message;
+        chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'icon.png',
+            title: 'Error',
+            message: "Error al agregar un nuevo perfil de navegación: " + error.message
+        });
         throw error;
     }
 }
 
-document.addEventListener('DOMContentLoaded', async function() {
+
+
+
+document.addEventListener('DOMContentLoaded', async function () {
     // Mostrar el mensaje de bienvenida con el perfil activo
     await showWelcomeMessage();
 
     // Mostrar los perfiles de navegación existentes
     await showNavigationProfiles();
 
-    // Listener para el botón de agregar perfil
+    // Asegurarse de que el evento de clic se asocie correctamente
     const addProfileButton = document.getElementById('addProfileButton');
-    addProfileButton.addEventListener('click', async function(event) {
-        const profileNameInput = document.getElementById('navigationProfileNameInput');
-        const profileName = profileNameInput.value.trim();
-        if (!profileName) {
-            console.error("El nombre del perfil no puede estar vacío");
-            return; // Detener la ejecución si el campo está vacío
-        }
+    if (addProfileButton) {
+        addProfileButton.addEventListener('click', async function (event) {
+            const profileNameInput = document.getElementById('navigationProfileNameInput');
+            const profileName = profileNameInput.value.trim();
+            if (!profileName) {
+                console.error("El nombre del perfil no puede estar vacío");
+                return; // Detener la ejecución si el campo está vacío
+            }
 
-        const currentUser = await getCurrentUser();
-        try {
-            await addNavigationProfile(currentUser, profileName); // Agregar el nuevo perfil
-            await showNavigationProfiles(); // Actualizar la lista de perfiles de navegación
-            await showWelcomeMessage(); // Mostrar el mensaje de bienvenida actualizado
-            profileNameInput.value = ''; // Limpiar el input después de agregar el perfil
-        } catch (error) {
-            console.error("Error al agregar un nuevo perfil de navegación:", error);
-        }
-    });
+            const currentUser = await getCurrentUser();
+            try {
+                const success = await addNavigationProfile(currentUser, profileName); // Agregar el nuevo perfil
+                if (success) {
+                    await showNavigationProfiles(); // Actualizar la lista de perfiles de navegación
+                    await showWelcomeMessage(); // Mostrar el mensaje de bienvenida actualizado
+                    profileNameInput.value = ''; // Limpiar el input después de agregar el perfil
+                }
+            } catch (error) {
+                console.error("Error al agregar un nuevo perfil de navegación:", error);
+            }
+        });
+    }
 });
 
 function showActiveProfileFromConsole() {
@@ -599,6 +617,7 @@ async function getNavigationProfiles(username) {
         const response = await fetch(`http://localhost:3000/get-navigation-profiles/${username}`);
         const data = await response.json();
         if (data.success) {
+            console.log("Perfiles existentes:", data.navigationProfiles); // Agregar para depuración
             return data.navigationProfiles;
         } else {
             throw new Error(data.message);
@@ -609,9 +628,23 @@ async function getNavigationProfiles(username) {
     }
 }
 
-// Función para agregar un nuevo perfil de navegación
 async function addNavigationProfile(username, profileName) {
     try {
+        // Primero, verifica si ya existe un perfil con el mismo nombre para evitar hacer la petición si no es necesario
+        const existingProfiles = await getNavigationProfiles(username);
+        const isDuplicate = existingProfiles.some(profile => profile.name === profileName);
+
+        if (isDuplicate) {
+            chrome.notifications.create({
+                type: 'basic',
+                iconUrl: 'icon.png',
+                title: 'Error de Duplicado',
+                message: 'No puedes tener 2 perfiles de navegación con el mismo nombre.'
+            });
+            return false; // Detener la ejecución si el perfil ya existe
+        }
+
+        // Si no hay duplicados, procede a agregar el nuevo perfil
         const response = await fetch(`http://localhost:3000/add-navigation-profile/${username}`, {
             method: 'POST',
             headers: {
@@ -620,14 +653,27 @@ async function addNavigationProfile(username, profileName) {
             body: JSON.stringify({ name: profileName })
         });
         const data = await response.json();
-        if (data.success) {
+
+        if (response.ok) {
             console.log("Nuevo perfil de navegación agregado exitosamente.");
+            chrome.notifications.create({
+                type: 'basic',
+                iconUrl: 'icon.png',
+                title: 'Perfil Agregado',
+                message: 'Nuevo perfil de navegación agregado exitosamente.'
+            });
             return true;
         } else {
             throw new Error(data.message);
         }
     } catch (error) {
         console.error("Error al agregar un nuevo perfil de navegación:", error);
+        chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'icon.png',
+            title: 'Error',
+            message: "Error al agregar un nuevo perfil de navegación: " + error.message
+        });
         throw error;
     }
 }

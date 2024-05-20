@@ -194,10 +194,14 @@ async function addNavigationHistory(username, profileName, title, url) {
     }
 }
 
+
+
+
 // Función para desbloquear una URL
 
 
 // Función para mostrar el historial de navegación
+// Función para mostrar el historial de navegación con paginación
 // Función para mostrar el historial de navegación con paginación
 // Función para mostrar el historial de navegación con paginación
 async function showNavigationHistory(username, profileName, page = 1, pageSize = 10) {
@@ -216,7 +220,8 @@ async function showNavigationHistory(username, profileName, page = 1, pageSize =
                 const listItem = document.createElement('li');
                 const visitLink = document.createElement('a');
                 visitLink.href = visit.url;
-                visitLink.textContent = visit.title || visit.url;
+                // Cambio aquí: usar new URL para obtener el hostname y mostrarlo
+                visitLink.textContent = new URL(visit.url).hostname; // Muestra el dominio en lugar del título
                 visitLink.target = "_blank";
                 listItem.appendChild(visitLink);
                 historyList.appendChild(listItem);
