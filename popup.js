@@ -138,6 +138,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
+    // Validar si los campos están vacíos
+    if (!username || !password) {
+        document.getElementById('result').innerText = "Por favor, complete todos los campos.";
+        return;
+    }
+
     fetch('http://localhost:3000/login', {
         method: 'POST',
         headers: {

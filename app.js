@@ -43,7 +43,7 @@ const navigationHistorySchema = new mongoose.Schema({
 const navigationProfileSchema = new mongoose.Schema({
   name: String,
   age : { type: Number, default: 0 },
-  password: { type: String, default: null },
+  password: String,
   navigationHistory: [navigationHistorySchema],
   blockedWebsites: [String]
 });
@@ -83,6 +83,26 @@ app.post('/login', (req, res) => {
 app.post('/register', (req, res) => {
   const { username, email, password } = req.body;
 
+  // Verificar si el email tiene un formato válido
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ success: false, message: 'Formato de email inválido' });
+  }
+
+  // Verificar la longitud del email
+  if (email.length > 254) {
+    return res.status(400).json({ success: false, message: 'El email es demasiado largo' });
+  }
+
+  // Lista de dominios de correo electrónico permitidos
+  const allowedDomains = ['gmail.com', 'outlook.com', 'yahoo.com'];
+
+  // Extraer el dominio del email y verificar si está en la lista de permitidos
+  const domainPart = email.split('@')[1];
+  if (!allowedDomains.includes(domainPart)) {
+    return res.status(400).json({ success: false, message: 'El dominio del email no está permitido' });
+  }
+
   // Primero verifica si el email ya está registrado
   Usuario.findOne({ email: email })
     .then(usuarioPorEmail => {
@@ -119,29 +139,37 @@ app.post('/register', (req, res) => {
     });
 });
 
+
+
 app.put('/update-profile/:username/:profileName', async (req, res) => {
   const { username, profileName } = req.params;
-  const { newName, newAge, newPassword } = req.body;
+  const { newName, newPassword } = req.body;
+
+  console.log("Received newName:", newName);
+  console.log("Received newPassword:", newPassword);
+
   try {
       const usuario = await Usuario.findOne({ username: username });
       if (!usuario) {
-          return res.status(404).json({ message: "Usuario no encontrado" });
+          return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
       }
 
-      const profile = usuario.navigationProfiles.find(profile => profile.name === profileName);
+      const profile = usuario.navigationProfiles.find(p => p.name === profileName);
       if (!profile) {
-          return res.status(404).json({ message: "Perfil no encontrado" });
+          return res.status(404).json({ success: false, message: 'Perfil no encontrado' });
       }
 
-      profile.name = newName;
-      profile.age = parseInt(newAge);
-      profile.password = newPassword;
-      await usuario.save();
+      // Update the profile details
+      profile.name = newName || profile.name;
+      if (newPassword !== undefined) { // Explicitly check for undefined
+          profile.password = newPassword;
+      }
 
-      res.status(200).json({ message: "Perfil actualizado exitosamente" });
+      await usuario.save();
+      res.json({ success: true, message: 'Perfil actualizado exitosamente' });
   } catch (error) {
-      console.error("Error al actualizar el perfil:", error);
-      res.status(500).json({ message: "Error al actualizar el perfil" });
+      console.error('Error updating profile:', error);
+      res.status(500).json({ success: false, message: 'Error al actualizar el perfil' });
   }
 });
 

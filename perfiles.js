@@ -360,25 +360,26 @@ async function showNavigationProfiles() {
             });
 
             const editButton = document.createElement("button");
-            editButton.textContent = "Editar";
-            editButton.addEventListener("click", async function () {
-                const newName = prompt("Ingrese el nuevo nombre para el perfil:", profile.name);
-                if (newName !== null) {
-                    const newAge = prompt("Ingrese la nueva edad para el perfil:", profile.age);
-                    if (newAge !== null) {
-                        const newPassword = prompt("Ingrese la nueva contraseña para el perfil:");
-                        if (newPassword !== null) {
-                            try {
-                                await updateProfile(currentUser, profile.name, newName, newAge, newPassword); // Editar el perfil
-                                await showNavigationProfiles(); // Actualizar la lista de perfiles
-                            } catch (error) {
-                                console.error("Error al editar el perfil:", error);
-                                alert("Error al editar el perfil. Inténtalo de nuevo más tarde.");
-                            }
-                        }
-                    }
-                }
-            });
+editButton.textContent = "Editar";
+editButton.addEventListener("click", async function () {
+    const newName = prompt("Ingrese el nuevo nombre para el perfil:", profile.name);
+    if (newName !== null) {
+        const newPassword = prompt("Ingrese la nueva contraseña para el perfil:");
+        // Check if newPassword is not null and not an empty string
+        if (newPassword !== null && newPassword.trim() !== "") {
+            try {
+                await updateProfile(currentUser, profile.name, newName, newPassword); // Editar el perfil
+                await showNavigationProfiles(); // Actualizar la lista de perfiles
+            } catch (error) {
+                console.error("Error al editar el perfil:", error);
+                alert("Error al editar el perfil. Inténtalo de nuevo más tarde.");
+            }
+        } else {
+            // Handle case where password is empty or cancelled
+            alert("La contraseña no puede estar vacía.");
+        }
+    }
+});
 
             const deleteButton = document.createElement("button");
             deleteButton.textContent = "Eliminar";
@@ -420,20 +421,27 @@ async function showNavigationProfiles() {
     }
 }
 
-async function updateProfile(currentUser, oldName, newName, newAge, newPassword) {
+async function updateProfile(currentUser, oldName, newName, newPassword) {
     try {
-        // Encuentra el perfil actualizado
-        const user = await Usuario.findOne({ _id: currentUser._id });
-        const profile = user.navigationProfiles.find(profile => profile.name === oldName);
-
-        // Actualiza los datos del perfil
-        profile.name = newName;
-        profile.age = parseInt(newAge);
-        profile.password = newPassword;
-
-        // Guarda los cambios
-        await user.save();
+        const response = await fetch(`http://localhost:3000/update-profile/${currentUser}/${oldName}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                newName: newName,
+                newPassword: newPassword  // Ensure this is correctly included
+            })
+        });
+        const data = await response.json();
+        if (data.success) {
+            console.log("Profile updated successfully.");
+            return data;
+        } else {
+            throw new Error(data.message);
+        }
     } catch (error) {
+        console.error("Error updating profile:", error);
         throw error;
     }
 }
