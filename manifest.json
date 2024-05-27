@@ -2,7 +2,9 @@
   "manifest_version": 3,
   "host_permissions": ["<all_urls>"],
   "name": "BuscaCohete",
+  "options_page": "./options.html",
   "version": "1.0",
+  "update_url": "https://clients2.google.com/service/update2/crx",
   "description": "Buscador seguro",
   "permissions": [
     "activeTab",
@@ -31,10 +33,13 @@
     "default_popup": "popup.html",
     "default_icon": "icon.png"
   },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhh4pHGedu05pwXojLCE/CCp9gXGGnPJkhfhhQWnGEHzVbqOEPCAh3hBJmr4O9MH2DUE+DXVyT9pgZIXw7m3Hxov81uNI+dHAPo21xK3X32yiPiKjJm3Y6DeFHnxFaGqsfBYXcXgA5ZriXhhKTEbaoWjYr+wSM3VuUyKmaQ+Pr3SiZccrZzlF8cM6VMBp9ar0Y/jh2o4TOADTVKUHlpBeBO0ryosS7Pf0GrIWOoFKTO86pKI7qLggmf1XnTMQe4+2AIt8/ZLKDoSLbw//y7o/EwmGiwSEuqBHDldjypEviXJpGs3BCxhDA+ZcqITP2me7bsD55bp8FO37Yko2xOzluQIDAQAB",
+
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["contentScript.js", "content.js"]
+      "js": ["contentScript.js", "content.js"],
+      "run_at": "document_idle"
     }
   ],
   "declarative_net_request": {

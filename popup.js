@@ -95,8 +95,6 @@ function redirectToCreateProfilePageWithUser(profile) {
     const url = "perfiles.html?profile=" + encodeURIComponent(profileParam);
     chrome.tabs.create({ url: url });
 }
-// Función para establecer el perfil de usuario activo
-
 
 // Función para mostrar el perfil activo en el DOM
 async function showActiveProfile() {
