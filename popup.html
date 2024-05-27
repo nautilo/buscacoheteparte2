@@ -15,7 +15,20 @@
 
   <div id="popupContainer">
     <div id="contenedorLogin">
-      <div id="loginForm">
+      <div id="childLoginForm" style="display: block;">
+        <h1>¿Cuál es tu nombre?</h1>
+        <form id="childLogin">
+          <select id="childProfile">
+            <option value="invitado">Ingresar como invitado</option>
+            <option value="perfil1">Perfil 1</option>
+            <option value="perfil2">Perfil 2</option>
+          </select>
+          <input type="password" id="childPassword" placeholder="Contraseña" style="display: none;">
+          <input type="submit" value="Despegar">
+        </form>
+      </div>
+
+      <div id="loginForm" style="display: none;">
         <h1>Iniciar sesión</h1>
         <form id="login">
           <input type="text" id="username" placeholder="Usuario">
@@ -35,6 +48,16 @@
       <!-- Enlace para redirigir al formulario de recuperación de contraseña -->
       <div class="forgot-password-link">
         <a href="forgot-password.html">¿Olvidaste tu contraseña?</a>
+      </div>
+      
+      <!-- Enlace para iniciar sesión como supervisor -->
+      <div id="supervisorLink">
+        <a href="#" id="loginSupervisor">Iniciar sesión como supervisor</a>
+      </div>
+      
+      <!-- Enlace para volver al inicio de sesión para niños -->
+      <div id="backLink" style="display: none;">
+        <a href="#" id="backToChildLogin">Atrás</a>
       </div>
     </div>
   </div>

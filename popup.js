@@ -1,3 +1,36 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('loginForm');
+    const childLoginForm = document.getElementById('childLoginForm');
+    const loginSupervisor = document.getElementById('loginSupervisor');
+    const backToChildLogin = document.getElementById('backToChildLogin');
+    const supervisorLink = document.getElementById('supervisorLink');
+    const backLink = document.getElementById('backLink');
+    const childProfile = document.getElementById('childProfile');
+    const childPassword = document.getElementById('childPassword');
+  
+    loginSupervisor.addEventListener('click', () => {
+      childLoginForm.style.display = 'none';
+      loginForm.style.display = 'block';
+      supervisorLink.style.display = 'none';
+      backLink.style.display = 'block';
+    });
+  
+    backToChildLogin.addEventListener('click', () => {
+      childLoginForm.style.display = 'block';
+      loginForm.style.display = 'none';
+      supervisorLink.style.display = 'block';
+      backLink.style.display = 'none';
+    });
+  
+    childProfile.addEventListener('change', () => {
+      if (childProfile.value === 'invitado') {
+        childPassword.style.display = 'none';
+      } else {
+        childPassword.style.display = 'block';
+      }
+    });
+  });
+  
 // Función para obtener el nombre de usuario actual
 async function getCurrentUser() {
     return localStorage.getItem('currentUser');
@@ -300,4 +333,6 @@ function unblockURL(event) {
         });
     });
 }
+
+
 

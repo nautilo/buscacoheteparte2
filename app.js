@@ -6,6 +6,8 @@ const app = express();
 const crypto = require('crypto');
 const PORT = process.env.PORT || 3000;
 const helmet = require('helmet');
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 app.use(
   helmet.contentSecurityPolicy({
@@ -37,7 +39,9 @@ mongoose.connection.on('error', console.error.bind(console, 'Error de conexión 
 const navigationHistorySchema = new mongoose.Schema({
   title: String,
   url: String,
-  visitedAt: { type: Date, default: Date.now } // Fecha de la visita
+  visitedAt: { type: Date, default: Date.now }, // Fecha de la primera visita
+  visitCount: { type: Number, default: 1 }, // Contador de visitas a esta URL
+  lastVisitedAt: { type: Date, default: Date.now } // Fecha de la última visita
 });
 
 const navigationProfileSchema = new mongoose.Schema({
@@ -234,30 +238,58 @@ app.post('/add-navigation-profile/:username', async (req, res) => {
 // Ruta para agregar un perfil de navegación a un usuario
 app.post('/add-navigation-history/:username/:profileName', async (req, res) => {
   const { username, profileName } = req.params;
-  const { title, url } = req.body;
+  const { url } = req.body;
+
+  if (!url.trim()) {
+    return res.status(400).json({ success: false, message: 'URL no puede estar vacía' });
+  }
+
+  // Verificar si la URL es accesible mediante HTTP
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return res.status(400).json({ success: false, message: 'URL no soportada para extracción de título' });
+  }
 
   try {
-    const update = {
-      $push: { 'navigationProfiles.$.navigationHistory': { title, url } }
-    };
-    const options = { new: true };
-    const usuario = await Usuario.findOneAndUpdate(
-      { username: username, 'navigationProfiles.name': profileName },
-      update,
-      options
-    );
+    // Realizar una solicitud HTTP a la URL para obtener el HTML
+    const response = await axios.get(url);
+    const html = response.data;
+    const $ = cheerio.load(html);
+    const pageTitle = $('title').text(); // Extraer el título de la página
 
+    const usuario = await Usuario.findOne({ username: username, 'navigationProfiles.name': profileName });
     if (!usuario) {
       return res.status(404).json({ success: false, message: 'Usuario o perfil no encontrado' });
     }
 
-    res.json({ success: true, message: 'Historial actualizado exitosamente' });
+    const profile = usuario.navigationProfiles.find(p => p.name === profileName);
+    if (!profile) {
+      return res.status(404).json({ success: false, message: 'Perfil no encontrado' });
+    }
+
+    // Buscar si la URL ya existe en el historial
+    let historyEntry = profile.navigationHistory.find(entry => entry.url === url);
+    if (historyEntry) {
+      // Si la URL ya existe, incrementar el contador y actualizar la fecha de última visita
+      historyEntry.visitCount += 1;
+      historyEntry.lastVisitedAt = new Date();
+    } else {
+      // Si la URL no existe, agregar una nueva entrada al historial
+      profile.navigationHistory.push({
+        title: pageTitle,
+        url: url,
+        visitedAt: new Date(),
+        visitCount: 1,
+        lastVisitedAt: new Date()
+      });
+    }
+
+    await usuario.save();
+    res.json({ success: true, message: 'Historial actualizado exitosamente', pageTitle: pageTitle });
   } catch (error) {
-    console.error('Error al agregar al historial de navegación:', error);
+    console.error('Error al agregar al historial de navegación o al extraer el título:', error);
     res.status(500).json({ success: false, message: 'Error en el servidor' });
   }
 });
-
 // Ruta para obtener todos los perfiles de navegación de un usuario
 app.get('/get-navigation-profiles/:username', async (req, res) => {
   const username = req.params.username;
@@ -420,34 +452,7 @@ app.post('/set-active-navigation-profile/:username/:profileName', async (req, re
 });
 
 
-app.post('/add-navigation-history/:username/:profileName', async (req, res) => {
-  const { username, profileName } = req.params;
-  const { title, url } = req.body;
 
-  if (!title.trim() || !url.trim()) {
-    return res.status(400).json({ success: false, message: 'Título o URL no pueden estar vacíos' });
-  }
-
-  try {
-    const usuario = await Usuario.findOne({ username: username, 'navigationProfiles.name': profileName });
-    if (!usuario) {
-      return res.status(404).json({ success: false, message: 'Usuario o perfil no encontrado' });
-    }
-
-    const profile = usuario.navigationProfiles.find(profile => profile.name === profileName);
-    // Verificar si la URL ya está en el historial
-    if (profile.navigationHistory.some(history => history.url === url && history.title === title)) {
-      return res.status(409).json({ success: false, message: 'Esta URL ya está en el historial' });
-    }
-
-    profile.navigationHistory.push({ title, url });
-    await usuario.save();
-    res.json({ success: true, message: 'Historial actualizado exitosamente' });
-  } catch (error) {
-    console.error('Error al agregar al historial de navegación:', error);
-    res.status(500).json({ success: false, message: 'Error en el servidor' });
-  }
-});
 // Ruta para obtener el historial de navegación de un perfil
 app.get('/get-navigation-history/:username/:profileName', async (req, res) => {
   const { username, profileName } = req.params;
@@ -624,7 +629,6 @@ app.post('/reset-password/:token', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
-
 
 
 
