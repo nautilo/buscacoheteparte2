@@ -1,18 +1,22 @@
 /* Estilos generales para el cuerpo y la página */
 body {
-  font-family: 'Roboto', sans-serif; /* Cambio de fuente */
-  background-color: #f4f4f9;
+  font-family: 'Arial', sans-serif;
+  background-color: hwb(264 1% 63% / 0.56);
   margin: 0;
   padding: 20px;
   color: #333;
-  line-height: 1.6; /* Mejora de la legibilidad */
+  text-align: center;
+}
+
+h1, h2, h3, h4, p {
+  margin: 0 0 10px 0;
 }
 
 /* Encabezado principal */
-h1 {
-  color: #333;
-  font-size: 24px; /* Tamaño de fuente más grande */
+h1{
+  font-size: 25px;
 }
+
 
 /* Mensajes de estado */
 #navigationProfilesMessage {
@@ -44,20 +48,18 @@ h1 {
 
 /* Botones */
 button {
-  padding: 8px 16px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: #4CAF50;
+  background-color: hsla(150, 100%, 50%, 0.541);
   color: white;
   border: none;
+  padding: 10px 20px;
+  margin: 5px;
   border-radius: 5px;
-  transition: all 0.3s ease; /* Transición más suave */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sombra para los botones */
+  cursor: pointer;
+  font-size: 16px;
 }
 
 button:hover {
-  background-color: #45a049;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Sombra más prominente en hover */
+  background-color: hsl(211, 48%, 47%);
 }
 
 button:disabled {
@@ -73,7 +75,11 @@ input[type="text"], input[type="password"] {
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
-  width: 100%; /* Ajuste de ancho completo */
+  width: calc(40% - 22px); /* Ajuste para padding y border */
+}
+
+input::placeholder {
+  color: hsl(0, 4%, 38%); /* Change placeholder text color to grey */
 }
 
 /* Contenedor principal */

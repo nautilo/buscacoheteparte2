@@ -1,16 +1,16 @@
 /* Estilos para el formulario */
 body {
-  font-family: "Poppins", sans-serif;
-  background-color: #56baed;
+  font-family: 'Arial', sans-serif;
+  background-color: hwb(264 1% 63% / 0.56);
   margin: 0;
-  padding: 0;
-  width: 400px;
-  height: 400px;
+  padding: 20px;
+  color: #333;
+  text-align: center;
 }
 
 
 #registerForm {
-  background-color: #fff;
+  background-color: #0e4b6c67;
   padding: 30px;
   border-radius: 10px;
   box-shadow: 0 30px 60px 0 rgba(0, 0, 0, 0.3);
@@ -32,7 +32,7 @@ body {
 #registerForm input[type="password"] {
   background-color: #f6f6f6;
   border: none;
-  color: #0d0d0d;
+  color: #000000;
   padding: 15px 20px;
   text-align: center;
   text-decoration: none;
@@ -45,6 +45,10 @@ body {
   transition: all 0.5s ease-in-out;
 }
 
+
+
+
+
 #registerForm input[type="text"]:focus,
 #registerForm input[type="email"]:focus,
 #registerForm input[type="password"]:focus {
@@ -53,7 +57,7 @@ body {
 }
 
 #registerForm input[type="submit"] {
-  background-color: #56baed;
+  background-color: hsla(150, 100%, 50%, 0.541);
   border: none;
   color: white;
   padding: 15px 20px;
@@ -68,7 +72,7 @@ body {
 }
 
 #registerForm input[type="submit"]:hover {
-  background-color: #39ace7;
+  background-color: hsl(211, 48%, 47%);
 }
 
 /* Estilos para el enlace Volver al inicio */
@@ -78,11 +82,11 @@ body {
 }
 
 .volver-inicio a {
-  color: #92badd;
+  color: #0d0d0d;
   text-decoration: none;
 }
 
 .volver-inicio a:hover {
-  color: #0d0d0d;
+  color: #92badd;
   text-decoration: underline;
 }

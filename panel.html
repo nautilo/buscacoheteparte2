@@ -8,45 +8,49 @@
   <link rel="stylesheet" href="panel.css">
 </head>
 <body>
-  <h1>Panel de Bloqueo</h1>
+  <h1>Panel de Control</h1>
 
   <!-- Mostrar el nombre del perfil y el nombre de usuario -->
   <h2 id="profileName"></h2>
+  <br>
 
   <!-- Lista de URLs bloqueadas -->
-  <h3>URLs bloqueadas:</h3>
+  <h3>Bloqueo por URL:</h3>
   <ul id="blockedUrlsList">
     <!-- Aquí se mostrarán las URLs bloqueadas -->
   </ul>
 
   <!-- Formulario para agregar una nueva URL bloqueada -->
   <form id="addBlockedUrlForm">
-    <input type="text" id="blockedUrlInput" placeholder="URL a bloquear">
+    <input type="text" id="blockedUrlInput" placeholder="Coloque la URL que desee bloquear">
     <button type="submit" id="bloquearUrlBtn">Bloquear URL</button>
   </form>
-
+  <br>
 <!-- Sección para buscar URLs por tema -->
+<h3>Bloqueo por Tema:</h3>
 <div id="searchSection">
-  <input type="text" id="searchInput" placeholder="Ingrese un tema para buscar">
+  <input type="text" id="searchInput" placeholder="Ingrese un tema para buscar páginas relacionadas">
+  <br>
   <button id="searchButton">Buscar</button>
 </div>
 
 <!-- Sección para mostrar los resultados -->
 <div id="searchResults"></div>
   
-  
+  <br><br>
+
 
   <div id="navigationHistoryPanel">
-    <h2>Historial de Navegación</h2>
+    <h3>Historial de Navegación</h3>
     <div id="navigationHistoryContainer"></div>
     <div id="paginationContainer"></div>
 </div>
-
-<h1>Bloquear palabras</h1>
+<br><br>
+<h3>Bloqueo de palabras</h3>
 <p>
   Ingresar palabra: <input type="text" id="new_word" value=""/><br/>
-  <input id="submit" type="button" value="Submit"/>
-  <input id="delete" type="button" value="Delete"/>
+  <input id="submit" type="button" value="Ingresar"/>
+  <!-- <input id="delete" type="button" value="Borrar"/> -->
 </p>
 <ul id = "list"></ul>
 

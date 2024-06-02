@@ -1,14 +1,19 @@
 /* Estilos generales */
 body {
   font-family: 'Arial', sans-serif;
-  background-color: #f4f4f4;
+  background-color: hwb(264 1% 63% / 0.56);
   margin: 0;
   padding: 20px;
   color: #333;
+  text-align: center;
 }
 
 h1, h2, h3, h4, p {
   margin: 0 0 10px 0;
+}
+
+h1{
+  font-size: 25px;
 }
 
 a {
@@ -21,7 +26,7 @@ a:hover {
 }
 
 button {
-  background-color: #007BFF;
+  background-color: hsla(150, 100%, 50%, 0.541);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -31,8 +36,9 @@ button {
   font-size: 16px;
 }
 
+
 button:hover {
-  background-color: #0056b3;
+  background-color: hsl(211, 48%, 47%);
 }
 
 /* Contenedores y secciones */
@@ -69,8 +75,26 @@ input[type="text"], input[type="url"] {
   padding: 10px;
   margin: 5px 0;
   border: 1px solid #ddd;
-  width: calc(100% - 22px); /* Ajuste para padding y border */
+  width: calc(40% - 22px); /* Ajuste para padding y border */
   border-radius: 5px;
+}
+
+input[type="button"] {
+  background-color: hsla(150, 100%, 50%, 0.541);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+input[type="button"]:hover {
+  background-color: hsl(211, 48%, 47%);
+}
+
+input::placeholder {
+  color: hsl(0, 4%, 38%); /* Change placeholder text color to grey */
 }
 
 #addBlockedUrlForm {
