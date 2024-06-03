@@ -35,6 +35,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Mostrar el historial de navegación
     await showNavigationHistory(username, activeProfile);
+
+    // Fetching navigation data
+    fetchNavigationData(username, activeProfile);
 });
 
 // Establecer el perfil activo
@@ -127,35 +130,7 @@ async function showBlockedUrls(username, profileName) {
     }
 }
 
-async function blockWebsite(username, profileName, websiteUrl) {
-    try {
-        // Primero, obtener las URLs bloqueadas para verificar si la URL ya está bloqueada
-        const blockedUrls = await getBlockedUrls(username, profileName);
-        if (blockedUrls.includes(websiteUrl)) {
-            alert("Esta URL ya está bloqueada.");
-            return false; // Detener la ejecución si la URL ya está bloqueada
-        }
-  
-        // Si la URL no está bloqueada, proceder a bloquearla
-        const response = await fetch(`http://localhost:3000/block-website/${username}/${profileName}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ websiteUrl: websiteUrl })
-        });
-        const data = await response.json();
-        if (data.success) {
-            console.log("URL bloqueada exitosamente.");
-            return true;
-        } else {
-            throw new Error(data.message);
-        }
-    } catch (error) {
-        console.error("Error al bloquear la URL:", error);
-        throw error;
-    }
-  }
+
 
 
 // Función para obtener las URLs bloqueadas
@@ -442,17 +417,289 @@ function newWord() {
     
   }
   
-  function populateList() { //called at the beginning 
-    var ul = document.getElementById("list");
-    chrome.storage.sync.get(null, function(result) { //inputting null gets everything in the storage
-      var storageArray = result['words']; 
-      for (i = 0; i < storageArray.length; i++) {
-        var word = storageArray[i]; 
-        var listItem = document.createElement("li");
-        listItem.textContent = word;
-        listItem.id = word; 
-        ul.appendChild(listItem);
-      }
+  function populateList() { // This function is called at the beginning 
+    var ul = document.getElementById("list"); // Get the ul element by its ID
+
+    // Retrieve data from chrome.storage.sync
+    chrome.storage.sync.get(null, function(result) { // Passing null gets everything in the storage
+        var storageArray = result['words']; // Get the 'words' array from the storage
+
+        // Check if storageArray is an array and not empty
+        if (Array.isArray(storageArray) && storageArray.length > 0) {
+            // Iterate through the storageArray
+            for (var i = 0; i < storageArray.length; i++) {
+                var word = storageArray[i]; // Get the word at index i
+                var listItem = document.createElement("li"); // Create a new li element
+                listItem.textContent = word; // Set the text content of the li element to the word
+                listItem.id = word; // Set the id of the li element to the word
+                ul.appendChild(listItem); // Append the li element to the ul
+            }
+        } else {
+            console.log("No words found in storage or storage is not an array.");
+            // Handle the case where there are no words in storage or storage is not an array
+        }
     });
-  }
+}
+
+  
+fetchNavigationData(username, activeProfile);
+
+async function fetchNavigationData(username, profileName) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/navigation-history/${username}/${profileName}`, {
+            credentials: 'include'
+        });
+        const result = await response.json();
+        console.log(result);
+        if (result.success) {
+            const navigationData = result.data;
+            
+            // Filtrar las URLs de Google
+            const filteredData = navigationData.filter(item => !item.url.includes("google.com"));
+            
+            // Obtener hostnames de las URLs filtradas
+            const urls = filteredData.map(item => new URL(item.url).hostname); 
+            
+            const visitCounts = filteredData.map(item => item.visitCount);
+            const visitedAt = filteredData.map(item => new Date(item.visitedAt)); // Convertir a objetos Date
+            const lastVisitedAt = filteredData.map(item => new Date(item.lastVisitedAt)); // Convertir a objetos Date
+
+            console.log(urls);
+            console.log(visitCounts);
+            console.log(visitedAt);
+            console.log(lastVisitedAt);
+
+            renderBarChart(urls, visitCounts);
+            renderPieChart(urls, visitCounts);
+            const mostVisitedSite = obtenerSitioMasVisitado(urls, visitCounts);
+            mostrarSitioMasVisitado(mostVisitedSite);
+
+            renderTimeChart(urls, visitedAt, lastVisitedAt); // Llamar a la función con las fechas convertidas
+        } else {
+            console.error('Error al obtener los datos del gráfico');
+        }
+    } catch (error) {
+        console.error('Error al obtener los datos del gráfico:', error);
+    }
+}
+
+function renderTimeChart(urls, visitedAt, lastVisitedAt) {
+    const ctx = document.getElementById('timeChart').getContext('2d');
+    console.log('Rendering time chart with visitedAt:', visitedAt);
+    console.log('Rendering time chart with lastVisitedAt:', lastVisitedAt);
+
+    // Procesa los datos de fecha si es necesario
+    const visitDates = visitedAt.map(date => new Date(date));
+    let lastVisitDates = [];
+    if (lastVisitedAt) {
+        lastVisitDates = lastVisitedAt.map(date => new Date(date));
+    } else {
+        // Si lastVisitedAt no está definido, usa un array vacío para evitar errores
+        lastVisitDates = new Array(visitedAt.length).fill(new Date());
+    }
+
+    console.log('Processed visit dates:', visitDates);
+    console.log('Processed last visit dates:', lastVisitDates);
+
+    // Calcula la diferencia de tiempo entre visitas y última visita para cada sitio
+    const timeDifferences = visitDates.map((visitDate, index) => {
+        const lastVisitDate = lastVisitDates[index];
+        return Math.abs(visitDate - lastVisitDate); // Calcula la diferencia absoluta en milisegundos
+    });
+
+    // Convierte la diferencia de tiempo a la unidad deseada (por ejemplo, días)
+    const timeDifferencesInDays = timeDifferences.map(diff => Math.ceil(diff / (1000 * 60 * 60 * 24))); // Convierte a días y redondea hacia arriba
+
+    console.log('Time differences between visits and last visits (in days) for all sites:', timeDifferencesInDays);
+
+    // Crea un mapeo entre las URLs y los colores
+    const urlColorMap = {};
+    const uniqueUrls = [...new Set(urls)]; // Obtiene URLs únicas
+    const colors = generateRandomColors(uniqueUrls.length); // Genera colores aleatorios
+    uniqueUrls.forEach((url, index) => {
+        urlColorMap[url] = colors[index]; // Asigna un color a cada URL
+    });
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: visitDates.map((date, index) => date.toLocaleDateString()), // Usa solo la fecha como etiquetas
+            datasets: urls.map((url, index) => ({
+                label: url,
+                data: [timeDifferencesInDays[index]], // Usa las diferencias de tiempo en días
+                borderColor: urlColorMap[url],
+                borderWidth: 1,
+                fill: false,
+                pointLabel: {
+                    formatter: function(context) {
+                        const dataIndex = context.dataIndex;
+                        return urls[dataIndex]; // Muestra la URL como etiqueta del punto
+                    }
+                }
+            }))
+        },
+        options: {
+            scales: {
+                x: {
+                    type: 'time', // Configura el eje X como tipo de tiempo
+                    time: {
+                        unit: 'day' // Configura la unidad de tiempo
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0,
+                        beginAtZero: true
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+
+
+function generateRandomColors(count) {
+    const colors = [];
+    for (let i = 0; i < count; i++) {
+        const color = `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, 1)`;
+        colors.push(color);
+    }
+    return colors;
+}
+
+
+
+
+
+
+
+function renderBarChart(urls, visitCounts) {
+    const ctx = document.getElementById('navigationBarChart').getContext('2d');
+    console.log('Rendering bar chart with URLs:', urls);
+    console.log('Rendering bar chart with visit counts:', visitCounts);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: urls,
+            datasets: [{
+                label: 'Visitas',
+                data: visitCounts,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    type: 'linear',
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0,
+                        beginAtZero: true
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderPieChart(urls, visitCounts) {
+    const ctx = document.getElementById('navigationPieChart').getContext('2d');
+    console.log('Rendering pie chart with URLs:', urls);
+    console.log('Rendering pie chart with visit counts:', visitCounts);
+    
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: urls, // Utilizar los nombres de los sitios como etiquetas
+            datasets: [{
+                label: 'Visitas',
+                data: visitCounts,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    display: false
+                },
+                x: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function renderChart(urls, visitCounts) {
+    const ctx = document.getElementById('navigationChart').getContext('2d');
+    console.log('Rendering chart with URLs:', urls); // Verifica URLs
+    console.log('Rendering chart with visit counts:', visitCounts); // Verifica contadores de visitas
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: urls,
+            datasets: [{
+                label: 'Visitas',
+                data: visitCounts,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    type: 'linear',
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0,
+                        beginAtZero: true
+                    }
+                }
+            }
+        }
+    });
+}
+
+function obtenerSitioMasVisitado(urls, visitCounts) {
+    // Encontrar el índice del recuento de visitas más alto
+    const maxIndex = visitCounts.indexOf(Math.max(...visitCounts));
+
+    // Obtener el sitio correspondiente con el índice encontrado
+    return urls[maxIndex];
+}
+
+function mostrarSitioMasVisitado(sitioMasVisitado) {
+    try {
+        const mostVisitedSiteElement = document.getElementById('mostVisitedSite');
+        mostVisitedSiteElement.textContent = `Sitio más visitado: ${sitioMasVisitado}`;
+    } catch (error) {
+        console.error('Error al mostrar el sitio más visitado:', error);
+    }
+}
+
   

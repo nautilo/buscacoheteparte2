@@ -1,26 +1,28 @@
 {
   "manifest_version": 3,
-  "host_permissions": ["<all_urls>"],
   "name": "BuscaCohete",
-  "options_page": "./options.html",
   "version": "1.0",
-  "update_url": "https://clients2.google.com/service/update2/crx",
   "description": "Buscador seguro",
+  "update_url": "https://clients2.google.com/service/update2/crx",
   "permissions": [
     "activeTab",
     "scripting",
-    "declarativeNetRequest", 
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
     "storage",
     "tabs",
     "history",
     "webNavigation",
     "webRequest",
-"notifications",
+    "notifications",
     "identity"
-    
-    
   ],
-  
+  "host_permissions": [
+    "<all_urls>",
+    "chrome-extension://ebbplnackfijdgaocobghipflkadnejp/*",
+    "chrome-extension://ebbplnackfijdgaocobghipflkadnejp/perfiles.html"
+
+  ],
   "icons": {
     "16": "images/icon16.png",
     "48": "images/icon16.png",
@@ -31,10 +33,9 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_icon": "icon.png"
+    "default_icon": "images/icon16.png"
   },
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhh4pHGedu05pwXojLCE/CCp9gXGGnPJkhfhhQWnGEHzVbqOEPCAh3hBJmr4O9MH2DUE+DXVyT9pgZIXw7m3Hxov81uNI+dHAPo21xK3X32yiPiKjJm3Y6DeFHnxFaGqsfBYXcXgA5ZriXhhKTEbaoWjYr+wSM3VuUyKmaQ+Pr3SiZccrZzlF8cM6VMBp9ar0Y/jh2o4TOADTVKUHlpBeBO0ryosS7Pf0GrIWOoFKTO86pKI7qLggmf1XnTMQe4+2AIt8/ZLKDoSLbw//y7o/EwmGiwSEuqBHDldjypEviXJpGs3BCxhDA+ZcqITP2me7bsD55bp8FO37Yko2xOzluQIDAQAB",
-
+  "options_page": "./options.html",
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
@@ -50,5 +51,15 @@
         "path": "block_rules.json"
       }
     ]
-  }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["styles.css", "Chart.min.js "],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhh4pHGedu05pwXojLCE/CCp9gXGGnPJkhfhhQWnGEHzVbqOEPCAh3hBJmr4O9MH2DUE+DXVyT9pgZIXw7m3Hxov81uNI+dHAPo21xK3X32yiPiKjJm3Y6DeFHnxFaGqsfBYXcXgA5ZriXhhKTEbaoWjYr+wSM3VuUyKmaQ+Pr3SiZccrZzlF8cM6VMBp9ar0Y/jh2o4TOADTVKUHlpBeBO0ryosS7Pf0GrIWOoFKTO86pKI7qLggmf1XnTMQe4+2AIt8/ZLKDoSLbw//y7o/EwmGiwSEuqBHDldjypEviXJpGs3BCxhDA+ZcqITP2me7bsD55bp8FO37Yko2xOzluQIDAQAB"
 }

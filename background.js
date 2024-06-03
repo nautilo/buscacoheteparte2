@@ -11,14 +11,24 @@ function getLastRuleId(existingRules) {
 
 console.log("from background")
 let active_tab_id = 0;
+
 chrome.tabs.onActivated.addListener(tab => {
     chrome.tabs.get(tab.tabId, current_tab_info => {
-          active_tab_id = tab.tabId;
-          //chrome.tabs.insertCSS(null, {file: "./styles.css"});
-          //chrome.tabs.executeScript(null, {file: "./foreground.js"}, () => console.log("i injected"))
-          chrome.tabs.executeScript(null, {file: "./contentScript.js"}, () => console.log("i injected content"))
+        active_tab_id = tab.tabId;
+        
+        // Insert CSS into the active tab
+        chrome.scripting.insertCSS({
+            target: { tabId: active_tab_id },
+            files: ["./styles.css"]
+        }, () => console.log("CSS injected"));
+
+        // Execute the content script in the active tab
+        chrome.scripting.executeScript({
+            target: { tabId: active_tab_id },
+            files: ["./contentScript.js"]
+        }, () => console.log("Content script injected"));
     });
-}); 
+});
 // Función para actualizar las reglas de bloqueo
 let ruleCounter = 1000; // Inicializamos el contador de reglas
 
