@@ -2,7 +2,7 @@
 body {
   font-family:  'Baloo 2', cursive;
   color: #212529;
-  background-color: hwb(264 2% 66%);
+  background-color: hwb(264 28% 35% / 0.5);
   overflow-x: hidden;
 }
 
