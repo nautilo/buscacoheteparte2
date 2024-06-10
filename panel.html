@@ -5,10 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Panel de Bloqueo</title>
-  <link rel="stylesheet" href="panel.css">
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+
+  <!-- font awesome style -->
+  <link href="css/font-awesome.min.css" rel="stylesheet" />
+
+  <!-- Custom styles for this template -->
+  <link href="css/style.css" rel="stylesheet" />
+  <!-- responsive style -->
+  <link href="css/responsive.css" rel="stylesheet" />
 </head>
 <body>
-  <h1>Panel de Control</h1>
+  <h1>Panel de Supervisión</h1>
 
   <!-- Mostrar el nombre del perfil y el nombre de usuario -->
   <h2 id="profileName"></h2>
@@ -21,38 +29,41 @@
   </ul>
 
   <!-- Formulario para agregar una nueva URL bloqueada -->
-  <form id="addBlockedUrlForm">
-    <input type="text" id="blockedUrlInput" placeholder="Coloque la URL que desee bloquear">
-    <button type="submit" id="bloquearUrlBtn">Bloquear URL</button>
-  </form>
-  <br>
-<!-- Sección para buscar URLs por tema -->
-<h3>Bloqueo por Tema:</h3>
-<div id="searchSection">
-  <input type="text" id="searchInput" placeholder="Ingrese un tema para buscar páginas relacionadas">
-  <br>
-  <button id="searchButton">Buscar</button>
-</div>
+    <form id="addBlockedUrlForm">
+      <input type="text" id="blockedUrlInput" placeholder="Coloque la URL que desee bloquear">
+      <button type="submit" id="bloquearUrlBtn">Bloquear URL</button>
+    </form>
+    <br>
+  <!-- Sección para buscar URLs por tema -->
+  <h3>Bloqueo por Tema:</h3>
+  <div id="searchSection">
+    <input type="text" id="searchInput" placeholder="Ingrese un tema para buscar páginas relacionadas">
+    <br><br>
+    <button id="searchButton">Buscar</button>
+  </div>
 
-<!-- Sección para mostrar los resultados -->
-<div id="searchResults"></div>
-  
+  <!-- Sección para mostrar los resultados -->
+  <div id="searchResults"></div>
+    
+    <br><br>
+
+
+    <div id="navigationHistoryPanel">
+      <h3>Historial de Navegación</h3>
+      <div id="navigationHistoryContainer"></div>
+      <div id="paginationContainer"></div>
+  </div>
   <br><br>
+  <h3>Bloqueo de palabras</h3>
+  <p>
+    Ingresar palabra: <input type="text" id="new_word" value=""/>
+    <br><br>
+    <button type="submit">Ingresar</button>
 
-
-  <div id="navigationHistoryPanel">
-    <h3>Historial de Navegación</h3>
-    <div id="navigationHistoryContainer"></div>
-    <div id="paginationContainer"></div>
-</div>
-<br><br>
-<h3>Bloqueo de palabras</h3>
-<p>
-  Ingresar palabra: <input type="text" id="new_word" value=""/><br/>
-  <input id="submit" type="button" value="Ingresar"/>
-  <!-- <input id="delete" type="button" value="Borrar"/> -->
-</p>
-<ul id = "list"></ul>
+    <!-- <input id="submit" type="button" value="Ingresar"/> -->
+    <!-- <input id="delete" type="button" value="Borrar"/> -->
+  </p>
+  <ul id = "list"></ul>
 
   <!-- Script para manejar la lógica de la página -->
   <script src="panel.js"></script>
