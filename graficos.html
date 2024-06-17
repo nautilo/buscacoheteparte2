@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gráficos y estadísticas</title>
+  <link rel="stylesheet" href="panel.css">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body{
+      background-color: rgb(241, 230, 194);
+    }
+  </style>
+</head>
+
+<body>
+  <a class="btn btn-primary" href="#" id="atrasLink">Atrás</a>
+  <div id="hideThis" style="display:none;">
+    <h1>Bloquear palabras</h1>
+    <p>
+      Ingresar palabra: <input type="text" id="new_word" value="" /><br />
+      <input id="submit" type="button" value="Submit" />
+      <input id="delete" type="button" value="Delete" />
+    </p>
+    <ul id="list"></ul>
+  <h1>Panel de Bloqueo</h1>
+  <h2 id="profileName"></h2>
+  <h3>URLs bloqueadas:</h3>
+  <ul id="blockedUrlsList"></ul>
+  <form id="addBlockedUrlForm">
+    <input type="text" id="blockedUrlInput" placeholder="URL a bloquear">
+    <button type="submit" id="bloquearUrlBtn">Bloquear URL</button>
+  </form>
+  <div id="searchSection">
+    <input type="text" id="searchInput" placeholder="Ingrese un tema para buscar">
+    <button id="searchButton">Buscar</button>
+  </div>
+  <div id="searchResults"></div>
+  <div id="navigationHistoryPanel">
+    <h2>Historial de Navegación</h2>
+    <div id="navigationHistoryContainer"></div>
+    <div id="paginationContainer"></div>
+  </div>
+</div>
+  <h2>Gráfico "Días entre primera y última visita a la URL"</h2> <!-- Título del primer gráfico -->
+  <div class="chart-container">
+    <canvas id="timeChart"></canvas>
+  </div>
+  <h2>Gráfico de Barra Contador de Visitas</h2> <!-- Título del segundo gráfico -->
+  <div class="chart-container">
+    <canvas id="navigationBarChart"></canvas>
+  </div>
+  <h2>Gráfico de Pastel Porcentaje de Visitas</h2> <!-- Título del tercer gráfico -->
+  <div class="chart-container">
+    <canvas id="navigationPieChart"></canvas>
+  </div>
+  <div class="card mt-2">
+    <div class="card-header">
+        Sitio más visitado
+    </div>
+    <div class="card-body">
+      <h3 id="mostVisitedSite"></h3>
+    </div>
+</div>
+  <!-- Include Chart.js y graficos.js -->
+  <script type="module" src="graficos.js"></script>
+  <script type="module" src="Chart.min.js"></script>
+  <script src="atras.js"></script>
+</body>
+</html>

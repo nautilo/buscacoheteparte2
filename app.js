@@ -39,18 +39,29 @@ mongoose.connection.on('error', console.error.bind(console, 'Error de conexión 
 const navigationHistorySchema = new mongoose.Schema({
   title: String,
   url: String,
-  visitedAt: { type: Date, default: Date.now }, // Fecha de la primera visita
-  visitCount: { type: Number, default: 1 }, // Contador de visitas a esta URL
-  lastVisitedAt: { type: Date, default: Date.now } // Fecha de la última visita
+  visitedAt: { type: Date, default: Date.now },
+  visitCount: { type: Number, default: 1 },
+  lastVisitedAt: { type: Date, default: Date.now }
 });
+
+const NavigationHistory = mongoose.model('NavigationHistory', navigationHistorySchema);
+
+// Ruta para obtener el historial de navegación
+
+
+// Servir archivos estáticos desde el directorio "public"
+app.use(express.static('public'));
 
 const navigationProfileSchema = new mongoose.Schema({
   name: String,
-  age : { type: Number, default: 0 },
   password: String,
   navigationHistory: [navigationHistorySchema],
-  blockedWebsites: [String]
+  blockedWebsites: [String],
+  blockedWords: [String],
+  avatarURL: String
 });
+
+
 
 const usuarioSchema = new mongoose.Schema({
   username: String,
@@ -64,6 +75,18 @@ const usuarioSchema = new mongoose.Schema({
 });
 
 const Usuario = mongoose.model('Usuario', usuarioSchema);
+
+
+function normalizeUrl(url) {
+  try {
+    const parsedUrl = new URL(url);
+    // Normalizar el protocolo, hostname, path y parámetros de consulta
+    return parsedUrl.protocol + '//' + parsedUrl.hostname + parsedUrl.pathname + parsedUrl.search;
+  } catch (error) {
+    console.error('Error al normalizar la URL:', error);
+    return null;
+  }
+}
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -83,6 +106,37 @@ app.post('/login', (req, res) => {
       res.status(500).json({ success: false, message: 'Error en el servidor' });
     });
 });
+
+app.get('/api/navigation-history/:username/:profileName', async (req, res) => {
+  const { username, profileName } = req.params;
+
+  try {
+    const usuario = await Usuario.findOne({ username: username });
+    if (!usuario) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const profile = usuario.navigationProfiles.find(profile => profile.name === profileName);
+    if (!profile) {
+      return res.status(404).json({ success: false, message: 'Perfil no encontrado' });
+    }
+
+    const navigationHistory = profile.navigationHistory.map(item => ({
+      title: item.title,
+      url: item.url,
+      visitCount: item.visitCount,
+      visitedAt: item.visitedAt,
+      lastVisitedAt: item.lastVisitedAt
+    }));
+
+    res.json({ success: true, data: navigationHistory });
+  } catch (error) {
+    console.error('Error al obtener el historial de navegación:', error);
+    res.status(500).json({ success: false, message: 'Error al obtener el historial de navegación' });
+  }
+});
+
+app.use(express.static('public'));
 
 app.post('/register', (req, res) => {
   const { username, email, password } = req.body;
@@ -201,7 +255,7 @@ app.get('/get-profile/:username/:profileName', async (req, res) => {
 
 app.post('/add-navigation-profile/:username', async (req, res) => {
   const { username } = req.params;
-  const { name, age, password } = req.body;
+  const { name, password, avatarURL } = req.body;
 
   try {
     const usuario = await Usuario.findOne({ username: username });
@@ -218,10 +272,11 @@ app.post('/add-navigation-profile/:username', async (req, res) => {
     // Crear el nuevo perfil de navegación
     const newProfile = {
       name: name,
-      age: age,
       password: password,
       navigationHistory: [],
-      blockedWebsites: []
+      blockedWebsites: [],
+      blockedWords: [],
+      avatarURL: avatarURL
     };
 
     // Añadir el nuevo perfil al usuario
@@ -267,7 +322,14 @@ app.post('/add-navigation-history/:username/:profileName', async (req, res) => {
     }
 
     // Buscar si la URL ya existe en el historial
-    let historyEntry = profile.navigationHistory.find(entry => entry.url === url);
+    let normalizedUrl = normalizeUrl(url);
+let historyEntry = profile.navigationHistory.find(entry => {
+  // Normalizar la URL existente antes de compararla
+  let normalizedExistingUrl = normalizeUrl(entry.url);
+  // Comparar la URL normalizada y el hostname normalizado
+  return normalizedExistingUrl === normalizedUrl || new URL(normalizedExistingUrl).hostname === new URL(normalizedUrl).hostname;
+});
+
     if (historyEntry) {
       // Si la URL ya existe, incrementar el contador y actualizar la fecha de última visita
       historyEntry.visitCount += 1;
@@ -626,9 +688,32 @@ app.post('/reset-password/:token', (req, res) => {
     });
 });
 
+// Ruta para autenticar un perfil de navegación
+app.post('/authenticate-navigation-profile', async (req, res) => {
+  const { username, profileName, password } = req.body;
+
+  try {
+    const usuario = await Usuario.findOne({ username: username });
+    if (!usuario) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const profile = usuario.navigationProfiles.find(profile => profile.name === profileName);
+    if (!profile) {
+      return res.status(404).json({ success: false, message: 'Perfil no encontrado' });
+    }
+
+    if (profile.password === password) {
+      res.json({ success: true, message: 'Autenticación exitosa' });
+    } else {
+      res.status(401).json({ success: false, message: 'Contraseña incorrecta' });
+    }
+  } catch (error) {
+    console.error('Error al autenticar el perfil:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
-
-
-

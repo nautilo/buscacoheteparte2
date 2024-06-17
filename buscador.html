@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultados de Búsqueda</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #140f27;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 20px;
+        overflow: hidden;
+    }
+    .circle {
+        border-radius: 50%;
+        margin: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        word-wrap: break-word;
+        text-align: center;
+        padding: 10px;
+        cursor: pointer;
+    }
+    #searchInput {
+        width: 300px;
+        padding: 10px;
+        font-size: 16px;
+    }
+    .search-container {
+        position: absolute;
+        bottom: 10px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 3;
+    }
+    #searchButton {
+        padding: 10px 20px;
+        margin-left: 10px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    .profile-container {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        z-index: 4;
+    }
+    .profile-name {
+        color: white;
+        margin-right: 10px;
+    }
+    .avatar-dropdown {
+        display: none;
+        position: absolute;
+        top: 40px;
+        right: 0;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        z-index: 5;
+    }
+    .avatar-dropdown img {
+        width: 50px;
+        height: 50px;
+        margin: 5px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+    <img id="image" style="position:absolute; height: 200px; z-index:2" src="icon.png" alt="Moving Image">
+
+    <div id="searchResults"></div>
+    <img src="panel.png" style="position:absolute; bottom: -80px; min-width: 100vw; z-index: 3;">
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Escribe tu búsqueda...">
+        <button id="searchButton">Buscar</button>
+    </div>
+
+    <div class="profile-container" id="profileContainer">
+        <span class="profile-name" id="profileName">Usuario</span>
+        <img src="images/avatar1.png" id="profileAvatar" alt="Avatar" width="50" height="50">
+        <div class="avatar-dropdown" id="avatarDropdown">
+            <img src="images/avatar1.png" alt="Avatar 1">
+            <img src="images/avatar2.png" alt="Avatar 2">
+            <img src="images/avatar3.png" alt="Avatar 3">
+            <img src="images/avatar4.png" alt="Avatar 4">
+            <img src="images/avatar5.png" alt="Avatar 5">
+            <img src="images/avatar6.png" alt="Avatar 6">
+            <img src="images/avatar7.png" alt="Avatar 7">
+            <img src="images/avatar8.png" alt="Avatar 8">
+        </div>
+    </div>
+
+    <script src="buscador.js"></script>
+</body>
+</html>

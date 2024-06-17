@@ -1,338 +1,267 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const loginForm = document.getElementById('loginForm');
-    const childLoginForm = document.getElementById('childLoginForm');
-    const loginSupervisor = document.getElementById('loginSupervisor');
-    const backToChildLogin = document.getElementById('backToChildLogin');
-    const supervisorLink = document.getElementById('supervisorLink');
-    const backLink = document.getElementById('backLink');
-    const childProfile = document.getElementById('childProfile');
-    const childPassword = document.getElementById('childPassword');
-  
-    loginSupervisor.addEventListener('click', () => {
+  const loginForm = document.getElementById('loginForm');
+  const childLoginForm = document.getElementById('childLoginForm');
+  const loginSupervisor = document.getElementById('loginSupervisor');
+  const backToChildLogin = document.getElementById('backToChildLogin');
+  const supervisorLink = document.getElementById('supervisorLink');
+  const backLink = document.getElementById('backLink');
+  const childPassword = document.getElementById('childPassword');
+  const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+  const registroLink = document.getElementById('registroLink');
+  const despegarButton = document.querySelector('.btndespegar');
+  const profileCardsContainer = document.getElementById('profileCards');
+
+  loginSupervisor.addEventListener('click', () => {
       childLoginForm.style.display = 'none';
       loginForm.style.display = 'block';
       supervisorLink.style.display = 'none';
       backLink.style.display = 'block';
-    });
-  
-    backToChildLogin.addEventListener('click', () => {
+      forgotPasswordLink.style.display = 'block';
+      registroLink.style.display = 'block';
+  });
+
+  backToChildLogin.addEventListener('click', () => {
       childLoginForm.style.display = 'block';
       loginForm.style.display = 'none';
       supervisorLink.style.display = 'block';
       backLink.style.display = 'none';
-    });
-  
-    childProfile.addEventListener('change', () => {
-      if (childProfile.value === 'invitado') {
-        childPassword.style.display = 'none';
-      } else {
-        childPassword.style.display = 'block';
-      }
-    });
+      forgotPasswordLink.style.display = 'none';
+      registroLink.style.display = 'none';
   });
-  
-// Función para obtener el nombre de usuario actual
-async function getCurrentUser() {
-    return localStorage.getItem('currentUser');
+
+  // Llamar a la función para cargar los perfiles en el combobox
+  loadChildProfiles();
+
+  // Evento de click para el botón Despegar
+  despegarButton.addEventListener('click', async () => {
+      const username = await getCurrentUser();
+      const selectedCard = document.querySelector('.card.selected');
+      const profileName = selectedCard ? selectedCard.querySelector('.card-title').textContent : null;
+      const password = document.getElementById('childPassword').value;
+
+      if (!username || !profileName) {
+          alert('Por favor, seleccione un perfil y complete la contraseña si es necesario.');
+          return;
+      }
+
+      authenticateProfile(username, profileName, password);
+  });
+});
+
+function showBackLink() {
+  // Verificar si ya existe un enlace "Atrás"
+  if (!document.getElementById('backToProfilesLink')) {
+      const backToProfilesLink = document.createElement('a');
+      backToProfilesLink.id = 'backToProfilesLink';
+      backToProfilesLink.href = '#';
+      backToProfilesLink.innerText = 'Atrás';
+      backToProfilesLink.addEventListener('click', () => {
+          childPassword.style.display = 'none';
+          backToProfilesLink.remove();
+          document.querySelectorAll('.card').forEach(card => {
+              card.style.display = 'block';
+          });
+      });
+      const profileCardsContainer = document.getElementById('profileCards');
+      profileCardsContainer.insertBefore(backToProfilesLink, profileCardsContainer.firstChild);
+  }
 }
 
-
-// Función para guardar el nombre de usuario actual en el almacenamiento sincronizado de Chrome
-function saveCurrentUser(username) {
-    return new Promise((resolve, reject) => {
-        chrome.storage.sync.set({ "currentUser": username }, function() {
-            if (chrome.runtime.lastError) {
-                console.error("Error al guardar el nombre de usuario:", chrome.runtime.lastError);
-                reject(chrome.runtime.lastError);
-            } else {
-                console.log("Nombre de usuario guardado exitosamente:", username);
-                resolve();
-            }
-        });
-    });
-}
-
-// Función para obtener la clave de almacenamiento de perfiles del usuario actual
-function getStorageKey(username) {
-    return `profiles_${username}`;
-}
-
-// Función para agregar un nuevo perfil para el usuario actual
-async function addProfileForCurrentUser() {
-    // Obtener el usuario actual
+async function loadChildProfiles() {
     const currentUser = await getCurrentUser();
-
-    // Verificar si se obtuvo el usuario actual correctamente
+    console.log("Usuario actual:", currentUser);
     if (currentUser) {
-        // Obtener el perfil del usuario actual
-        const userProfile = await getProfileByUsername(currentUser);
-
-        // Verificar si se encontró el perfil del usuario
-        if (userProfile) {
-            // Obtener todos los perfiles del usuario actual
-            const profiles = await getProfiles(currentUser);
-
-            // Verificar si el usuario ya tiene un perfil de navegación
-            if (profiles && profiles.length > 0) {
-                console.log("El usuario ya tiene un perfil de navegación existente:", profiles[0]);
-            } else {
-                // Si no tiene un perfil de navegación, creamos uno nuevo basado en el perfil de usuario y lo guardamos
-                const newProfile = { 
-                    username: userProfile.username, 
-                    createdBy: userProfile.createdBy, 
-                    blockedWebsitesArray: userProfile.blockedWebsitesArray 
-                };
-                profiles.push(newProfile);
-                await saveProfiles(currentUser, profiles);
-                console.log("Nuevo perfil de navegación creado para el usuario:", newProfile.username);
-            }
-        } else {
-            console.log("No se encontró un perfil de usuario para el usuario actual.");
-        }
+        const profiles = await getNavigationProfiles(currentUser);
+        const profileCardsContainer = document.getElementById('profileCards');
+  
+        profiles.forEach(profile => {
+            const card = document.createElement('div');
+            card.classList.add('card', 'col-md-3', 'm-2');
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', () => {
+                // Ocultar todas las cards
+                document.querySelectorAll('.card').forEach(card => {
+                    card.style.display = 'none';
+                });
+                // Mostrar solo la card seleccionada y centrarla
+                card.style.display = 'block';
+                card.classList.add('selected');
+                childPassword.style.display = 'block';
+                childPassword.style.margin = '20px auto';
+                showBackLink();
+            });
+  
+            const row = document.createElement('div');
+            row.classList.add('row', 'g-0');
+  
+            const colImg = document.createElement('div');
+            colImg.classList.add('col-4');
+  
+            const img = document.createElement('img');
+            img.src = profile.avatarURL || './default-profile.png'; // Placeholder para la imagen del perfil
+            img.alt = 'Profile Picture';
+            img.classList.add('img-fluid', 'rounded-start');
+            img.style.height = '60px';
+  
+            const colBody = document.createElement('div');
+            colBody.classList.add('col-8');
+  
+            const cardBody = document.createElement('div');
+            cardBody.classList.add('card-body', 'd-flex', 'align-items-center');
+  
+            const cardTitle = document.createElement('h5');
+            cardTitle.classList.add('card-title', 'mb-0');
+            cardTitle.textContent = profile.name;
+  
+            colImg.appendChild(img);
+            cardBody.appendChild(cardTitle);
+            colBody.appendChild(cardBody);
+            row.appendChild(colImg);
+            row.appendChild(colBody);
+            card.appendChild(row);
+            profileCardsContainer.appendChild(card);
+        });
+  
+        // Agregar card "Entrar como invitado" al final
+        const guestCard = document.createElement('div');
+        guestCard.classList.add('card', 'col-md-3', 'm-2');
+        guestCard.style.cursor = 'pointer';
+        guestCard.addEventListener('click', () => {
+            // Ocultar todas las cards
+            document.querySelectorAll('.card').forEach(card => {
+                card.style.display = 'none';
+            });
+            // Mostrar solo la card seleccionada y centrarla
+            guestCard.style.display = 'block';
+            guestCard.classList.add('selected');
+            childPassword.style.display = 'none';
+            showBackLink();
+        });
+  
+        const guestCardBody = document.createElement('div');
+        guestCardBody.classList.add('card-body', 'd-flex', 'align-items-center', 'justify-content-center');
+  
+        const guestCardTitle = document.createElement('h5');
+        guestCardTitle.classList.add('card-title', 'mb-0');
+        guestCardTitle.textContent = 'Entrar como invitado';
+  
+        guestCardBody.appendChild(guestCardTitle);
+        guestCard.appendChild(guestCardBody);
+        profileCardsContainer.appendChild(guestCard);
     } else {
-        console.log("No se pudo obtener el usuario actual.");
+        console.log("No hay un usuario logueado.");
     }
+  }
+  
+async function getCurrentUser() {
+  return new Promise((resolve) => {
+      chrome.storage.sync.get("currentUser", function(data) {
+          console.log("Valor de currentUser en storage:", data.currentUser);
+          resolve(data.currentUser);
+      });
+  });
 }
 
-async function getProfileByUsername(username) {
-    return new Promise((resolve) => {
-        chrome.storage.local.get("profiles", function(data) {
-            const profiles = data.profiles || [];
-            const profile = profiles.find(profile => profile.username === username);
-            resolve(profile);
-        });
-    });
+async function saveCurrentUser(username) {
+  return new Promise((resolve, reject) => {
+      chrome.storage.sync.set({ "currentUser": username }, function() {
+          if (chrome.runtime.lastError) {
+              console.error("Error al guardar el nombre de usuario:", chrome.runtime.lastError);
+              reject(chrome.runtime.lastError);
+          } else {
+              console.log("Nombre de usuario guardado exitosamente:", username);
+              resolve();
+          }
+      });
+  });
 }
 
-// Función para guardar perfiles en el almacenamiento
-async function saveProfiles(username, profiles) {
-    const storageKey = getStorageKey(username);
-    chrome.storage.sync.set({ [storageKey]: profiles }, function() {
-        console.log("Perfiles guardados:", profiles);
-    });
+// Función para obtener los perfiles de navegación existentes
+async function getNavigationProfiles(username) {
+  try {
+      const response = await fetch(`http://localhost:3000/get-navigation-profiles/${username}`);
+      const data = await response.json();
+      if (data.success) {
+          console.log("Perfiles existentes:", data.navigationProfiles); // Agregar para depuración
+          return data.navigationProfiles;
+      } else {
+          throw new Error(data.message);
+      }
+  } catch (error) {
+      console.error("Error al obtener los perfiles de navegación:", error);
+      throw error;
+  }
 }
 
-// Función para obtener perfiles del almacenamiento
-async function getProfiles(username) {
-    return new Promise(resolve => {
-        const storageKey = getStorageKey(username);
-        chrome.storage.sync.get(storageKey, function(data) {
-            const profiles = data[storageKey] || [];
-            resolve(profiles);
-        });
-    });
+// Función para autenticar el perfil de navegación
+async function authenticateProfile(username, profileName, password) {
+  try {
+      const response = await fetch('http://localhost:3000/authenticate-navigation-profile', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, profileName, password })
+      });
+      const data = await response.json();
+      const resultDiv = document.getElementById('result');
+      if (data.success) {
+          resultDiv.innerHTML = '<div class="alert alert-success" role="alert">Autenticación exitosa</div>';
+          window.open(`buscador.html?username=${username}&profile=${profileName}`, '_blank');
+          
+      } else {
+          resultDiv.innerHTML = `<div class="alert alert-danger" role="alert">${data.message}</div>`;
+      }
+  } catch (error) {
+      console.error('Error al autenticar el perfil:', error);
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '<div class="alert alert-danger" role="alert">Error en el servidor</div>';
+  }
 }
 
-function redirectToCreateProfilePageWithUser(profile) {
-    const profileParam = JSON.stringify(profile);
-    const url = "perfiles.html?profile=" + encodeURIComponent(profileParam);
-    chrome.tabs.create({ url: url });
-}
-
-// Función para mostrar el perfil activo en el DOM
-async function showActiveProfile() {
-    const activeProfileNameElement = document.getElementById("activeProfileName");
-
-    if (activeProfileNameElement) {
-        chrome.storage.local.get("activeProfile", function(data) {
-            const activeProfile = data.activeProfile;
-
-            if (activeProfile && activeProfile.name) {
-                activeProfileNameElement.textContent = activeProfile.name;
-                console.log("Perfil activo encontrado:", activeProfile);
-            } else {
-                activeProfileNameElement.textContent = "Ninguno"; // Si no hay perfil activo, muestra "Ninguno"
-                console.log("No hay ningún perfil activo.");
-            }
-        });
-    } else {
-        console.error("El elemento 'activeProfileName' no fue encontrado en el DOM.");
-    }
-}
-
-// Listener para el evento 'DOMContentLoaded' que se ejecuta cuando el DOM ha sido completamente cargado
-document.addEventListener('DOMContentLoaded', function() {
-    // Llama a la función para mostrar el perfil activo al cargar la página
-    showActiveProfile();
-});
-
-// En el evento de DOMContentLoaded, agrega un escuchador al formulario de inicio de sesión
-document.addEventListener('DOMContentLoaded', function() {
-    // Llama a la función para mostrar el perfil activo al cargar la página
-    showActiveProfile();
-});
-
-// En el evento de DOMContentLoaded, agrega un escuchador al formulario de inicio de sesión
 document.getElementById('loginForm').addEventListener('submit', async function(event) {
-    event.preventDefault(); // Evitar el envío del formulario por defecto
+  event.preventDefault(); // Evitar el envío del formulario por defecto
 
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
 
-    // Validar si los campos están vacíos
-    if (!username || !password) {
-        document.getElementById('result').innerText = "Por favor, complete todos los campos.";
-        return;
-    }
+  // Validar si los campos están vacíos
+  if (!username || !password) {
+      document.getElementById('result').innerText = "Por favor, complete todos los campos.";
+      return;
+  }
 
-    fetch('http://localhost:3000/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, password })
-    })
-    .then(response => response.json())
-    .then(async function(data) {
-        if (data.success) {
-            // Guardar el nombre de usuario en el almacenamiento local
-            await saveCurrentUser(username);
+  fetch('http://localhost:3000/login', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, password })
+  })
+  .then(response => response.json())
+  .then(async function(data) {
+      if (data.success) {
+          // Guardar el nombre de usuario en el almacenamiento local
+          await saveCurrentUser(username);
 
-            // Suponiendo que obtienes el perfil activo del usuario desde la respuesta del servidor
-            const activeProfile = data.activeProfile; // Asegúrate de que el servidor envíe esta información
+          // Suponiendo que obtienes el perfil activo del usuario desde la respuesta del servidor
+          const activeProfile = data.activeProfile; // Asegúrate de que el servidor envíe esta información
 
-            // Guardar el perfil activo en el almacenamiento local
-            chrome.storage.sync.set({ "activeProfile": activeProfile }, function() {
-                console.log("Perfil activo guardado:", activeProfile);
-            });
+          // Guardar el perfil activo en el almacenamiento local
+          chrome.storage.sync.set({ "activeProfile": activeProfile }, function() {
+              console.log("Perfil activo guardado:", activeProfile);
+          });
 
-            // Redirigir a perfiles.html después de iniciar sesión exitosamente
-            window.open(`perfiles.html?user=${username}&currentUser=${username}`, '_blank');
-        } else {
-            document.getElementById('result').innerText = data.message;
-        }
-    })
-    .catch(error => console.error('Error:', error));
+          // Abrir buscador.html en una nueva pestaña si es un usuario supervisado
+          if (data.userType === 'supervised') {
+              window.open(`buscador.html?username=${username}&profile=${activeProfile}`, '_blank');
+          } else {
+              // Abrir perfiles.html en una nueva pestaña después de iniciar sesión exitosamente
+              window.open(`perfiles.html?user=${username}&currentUser=${username}`, '_blank');
+          }
+      } else {
+          document.getElementById('result').innerText = data.message;
+      }
+  })
+  .catch(error => console.error('Error:', error));
 });
-
-
-// Función para obtener el perfil activo
-async function getActiveProfile(username) {
-    return new Promise((resolve) => {
-        // Obtiene el perfil activo del almacenamiento sincronizado de Chrome
-        chrome.storage.sync.get("activeProfile", function(data) {
-            const activeProfile = data.activeProfile;
-            resolve(activeProfile); // Resuelve la promesa con el perfil activo
-        });
-    });
-}
-
-async function addNavigationProfile(currentUser) {
-    try {
-        console.log("Usuario actual:", currentUser);
-
-        // Lógica para agregar un nuevo perfil de navegación
-        const newProfile = {
-            name: "Nuevo Perfil",
-            createdBy: currentUser, // Se asegura de que currentUser sea el nombre de usuario
-            navigationHistory: [],
-            blockedWebsitesArray: [] // Corregido de 'blockedWebsites' a 'blockedWebsitesArray'
-        };
-
-        console.log("Nuevo perfil de navegación a agregar:", newProfile);
-
-        // Obtener los perfiles existentes del usuario actual
-        let profiles = await getProfiles(currentUser);
-
-        // Verificar si el usuario ya tiene un perfil de navegación
-        if (profiles && profiles.length > 0) {
-            console.log("El usuario ya tiene un perfil de navegación existente:", profiles[0]);
-        } else {
-            // Si no tiene un perfil de navegación, creamos uno nuevo basado en el perfil de usuario y lo guardamos
-            profiles.push(newProfile);
-            await saveProfiles(currentUser, profiles);
-            console.log("Nuevo perfil de navegación creado para el usuario:", newProfile.username);
-        }
-    } catch (error) {
-        console.error("Error al agregar un nuevo perfil de navegación:", error);
-    }
-}
-
-// Función para establecer el perfil activo más reciente
-async function setMostRecentActiveProfile(username) {
-    // Obtener el perfil activo más reciente del usuario actual
-    const mostRecentActiveProfile = await getActiveProfile(username);
-
-    if (mostRecentActiveProfile) {
-        // Establecer el perfil activo más reciente
-        setUserActiveProfile(mostRecentActiveProfile);
-        console.log("Perfil activo más reciente establecido:", mostRecentActiveProfile.username);
-    } else {
-        console.log("No se encontró ningún perfil activo.");
-    }
-}
-
-// Escucha mensajes del script de fondo
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    if (message.action === "updateBlockedWebsitesSection") {
-        updateBlockedWebsitesSection();
-    }
-});
-
-// Función para actualizar la sección de sitios web bloqueados en el DOM
-function updateBlockedWebsitesSection() {
-    const blockedWebsitesDiv = document.getElementById("blockedWebsitesDiv");
-
-    while (blockedWebsitesDiv.firstChild) {
-        blockedWebsitesDiv.removeChild(blockedWebsitesDiv.firstChild);
-    }
-
-    chrome.storage.sync.get("blockedWebsitesArray", function(data) {
-        const blockedWebsitesArray = data.blockedWebsitesArray;
-
-        if (blockedWebsitesArray && blockedWebsitesArray.length > 0) {
-            blockedWebsitesArray.forEach((website, index) => {
-                const websiteDiv = document.createElement("div");
-                websiteDiv.classList.add("websiteDiv");
-
-                const websiteDivText = document.createElement("div");
-                websiteDivText.classList.add("websiteDivText");
-                websiteDivText.textContent = website;
-
-                websiteDiv.appendChild(websiteDivText);
-
-                const deleteButton = document.createElement("button");
-                deleteButton.classList.add("delete");
-                deleteButton.setAttribute("id", index);
-
-                const trashIcon = document.createElement("i");
-                trashIcon.classList.add("fas", "fa-trash");
-                trashIcon.setAttribute("id", index);
-
-                deleteButton.appendChild(trashIcon);
-                deleteButton.addEventListener("click", unblockURL);
-
-                websiteDiv.appendChild(deleteButton);
-                blockedWebsitesDiv.appendChild(websiteDiv);
-            });
-        } else {
-            const nothingBlocked = document.createElement("div");
-            nothingBlocked.textContent = "No websites have been blocked";
-            nothingBlocked.classList.add("nothingBlocked");
-            blockedWebsitesDiv.appendChild(nothingBlocked);
-        }
-    });
-}
-
-// Función para desbloquear un sitio web
-function unblockURL(event) {
-    const clickedButtonId = event.target.id;
-
-    chrome.storage.sync.get("blockedWebsitesArray", function(data) {
-        let blockedWebsitesArray = data.blockedWebsitesArray;
-
-        for (let i = 0; i < blockedWebsitesArray.length; i++) {
-            if (clickedButtonId == i) {
-                blockedWebsitesArray.splice(i, 1);
-                break;
-            }
-        }
-
-        chrome.storage.sync.set({ blockedWebsitesArray: blockedWebsitesArray }, function() {
-            updateBlockedWebsitesSection();
-        });
-    });
-}
-
-
-

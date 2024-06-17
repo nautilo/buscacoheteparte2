@@ -35,62 +35,54 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Mostrar el historial de navegación
     await showNavigationHistory(username, activeProfile);
+
+    // Event listener para mostrar la sección de nuevo perfil
+    const addProfileButton = document.getElementById('addProfileButton');
+    addProfileButton.addEventListener('click', function () {
+        const newProfileSection = document.getElementById('newProfileSection');
+        newProfileSection.style.display = 'block';
+    });
+
+    // Event listener para crear un nuevo perfil de navegación
+    const addNavigationProfileButton = document.getElementById('addNavigationProfileButton');
+    addNavigationProfileButton.addEventListener('click', async function () {
+        const profileNameInput = document.getElementById('profileNameInput').value;
+        const profilePasswordInput = document.getElementById('profilePasswordInput').value;
+        const profileAvatarURL = document.getElementById('profileAvatarURL').value;
+
+        try {
+            await createNavigationProfile(profileNameInput, profilePasswordInput, profileAvatarURL);
+        } catch (error) {
+            const profileError = document.getElementById('profileError');
+            profileError.textContent = "Error al crear el perfil de navegación. Inténtalo de nuevo más tarde.";
+            console.error("Error al crear el perfil de navegación:", error);
+        }
+    });
 });
 
-// Establecer el perfil activo
-async function setActiveProfile(profileName) {
+// Función para crear un nuevo perfil de navegación
+async function createNavigationProfile(profileName, password, avatarURL) {
     try {
-        const response = await fetch(`http://localhost:3000/set-active-navigation-profile/${username}/${profileName}`, {
-            method: 'POST'
+        const response = await fetch(`http://localhost:3000/create-navigation-profile/${username}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ profileName, password, avatarURL })
         });
         const data = await response.json();
         if (data.success) {
-            activeProfile = profileName;
-            profileNameElement.textContent = `Perfil: ${activeProfile}, Usuario: ${username}`;
-            await showNavigationHistory(username, activeProfile); // Actualizar el historial de navegación
+            console.log("Perfil de navegación creado exitosamente.");
+            alert("Perfil de navegación creado exitosamente.");
+            // Aquí puedes actualizar la lista de perfiles o realizar cualquier otra acción necesaria
         } else {
             throw new Error(data.message);
         }
     } catch (error) {
-        console.error("Error al establecer el perfil activo:", error);
-        alert("Error al establecer el perfil activo. Inténtalo de nuevo más tarde.");
+        console.error("Error al crear el perfil de navegación:", error);
+        throw error;
     }
 }
-
-// Agregar un evento a los enlaces para cambiar el perfil activo
-const profileLinks = document.querySelectorAll('.profile-link');
-profileLinks.forEach(link => {
-    link.addEventListener('click', function (event) {
-        event.preventDefault(); // Evitar la acción predeterminada del enlace
-        const profileName = this.textContent.trim();
-        setActiveProfile(profileName);
-    });
-});
-
-// Función de debounce para evitar múltiples llamadas
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-};
-
-// Asegurarse de que addNavigationHistory solo se llama una vez por carga de página
-let isHistoryAdded = false;
-
-window.addEventListener('load', debounce(async function () {
-    if (!isHistoryAdded) {
-        const title = document.title;
-        const url = window.location.href;
-        await addNavigationHistory(username, activeProfile, title, url);
-        isHistoryAdded = true;
-    }
-}, 500)); // 500 ms de espera para evitar llamadas duplicadas
 
 // Función para mostrar las URLs bloqueadas
 async function showBlockedUrls(username, profileName) {
@@ -106,7 +98,7 @@ async function showBlockedUrls(username, profileName) {
             // Botón para desbloquear la URL
             const unblockButton = document.createElement('button');
             unblockButton.textContent = "Desbloquear";
-            unblockButton.className = "unblock-button"; // Agregar clase para el botón
+            unblockButton.className = "unblock-button btn-primary"; // Agregar clase para el botón
             unblockButton.addEventListener('click', async function () {
                 try {
                     await unblockWebsite(username, profileName, url); // Desbloquear la URL
@@ -190,7 +182,6 @@ async function addNavigationHistory(username, profileName, title, url) {
         }
     } catch (error) {
         console.error("Error al agregar la visita al historial de navegación:", error);
-        alert("Error al agregar la visita al historial de navegación. Inténtalo de nuevo más tarde.");
     }
 }
 
@@ -455,4 +446,3 @@ function newWord() {
       }
     });
   }
-  

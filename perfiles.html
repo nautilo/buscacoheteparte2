@@ -1,53 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crear Perfiles</title>
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuscaCohete - Usuarios supervisados</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="panel2.css">
+    <style>
+        html, body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+body {
+  background-color: #11051c;
+  position: relative;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
 
-  <!-- font awesome style -->
-  <link href="css/font-awesome.min.css" rel="stylesheet" />
+#starfield {
+  position: absolute;
+  min-width: 100vw;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  background-color: #11051c;
+}
+h1 {
+  position: relative;
+  z-index: 1;
+  color: yellow;
+  text-align: center;
+  font-family: "Arial Black", Arial, sans-serif;
+  font-weight: bold;
+  letter-spacing: -3px;
+}
+h6{
+    position:relative;
+    z-index: 2;
+    color: white;
+}
+.card{
+    z-index: 1;
+}
+#formRegistro label {
+    display: inline-block;
+    width: 30%; /* Ajusta el ancho según sea necesario */
+    text-align: right;
+    margin-right: 5px; /* Ajusta el espaciado entre la etiqueta y el campo */
+}
 
-  <!-- Custom styles for this template -->
-  <link href="css/style.css" rel="stylesheet" />
-  <!-- responsive style -->
-  <link href="css/responsive.css" rel="stylesheet" />
+#formRegistro input,
+#formRegistro select,
+#formRegistro textarea {
+    width: 60%; /* Ajusta el ancho del campo según sea necesario */
+}
+        .full-height {
+            height: 100vh;
+        }
+        .contenedor-perfiles {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            max-width: 100%;
+        }
+        .card-perfil {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            width: 200px;
+            text-align: center;
+            padding: 20px;
+        }
+        .card-perfil img {
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
+        .card-perfil h3 {
+            margin-bottom: 15px;
+        }
+        .card-perfil .btn {
+            margin: 5px 0;
+            display: block;
+            width: 100%;
+        }
+        h1 {
+    position: relative;
+    z-index: 1;
+    color: yellow;
+    text-align: center;
+    font-family: "Arial Black", Arial, sans-serif;
+    font-weight: bold;
+    letter-spacing: -3px;
+}
+h2,h3{
+    color:white;
+}
+.avatar-selection {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 10px;
+    justify-items: center;
+    align-items: center;
+}
+
+.avatar-option {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 50%;
+}
+
+.avatar-option.selected {
+    border-color: #007bff;
+}
+
+    </style>
 </head>
 <body>
-  <!-- <h1>Crear Perfiles</h1>
-  
+    <div class="container-fluid">        
+        <div class="row">
+            <!-- Contenido principal -->
+            <div class="col-12 contenedor d-flex justify-content-center align-items-center flex-column">
+                <h1>Panel de Supervisión</h1>
 
-   Mensaje de bienvenida con el perfil activo -->
-  <!-- El div para mostrar el mensaje de bienvenida -->
-  <!-- <div id="welcomeMessage"></div> --> 
+                <div id="profileStatusMessage" style="display: none;"></div> 
 
-  <!-- Perfil activo -->
-  
-  <div id="profileStatusMessage" style="display: none;"></div> 
+                <!-- Perfil de navegación -->
+                <h2>Usuarios supervisados</h2>
+                <div id="navigationProfilesMessage"></div>
+                <div class="contenedor-perfiles" id="navigationProfileList">
+                    <!-- Aquí se mostrarán los perfiles de navegación existentes -->
+                </div>
+                <h3>Crea un nuevo perfil:</h3>
 
-  <!-- Perfil de navegación -->
-  <h2>Gestión de Perfiles</h2>
-  <div id="navigationProfilesMessage"></div>
-  <ul id="navigationProfileList">
-    <!-- Aquí se mostrarán los perfiles de navegación existentes -->
-  </ul>
-   <br>
-  <h2>Crea un nuevo perfil:</h2>
-  <br>
-  <!-- Campo de entrada para el nombre del perfil de navegación -->
-  <input type="text" id="navigationProfileNameInput" placeholder="Nombre del nuevo perfil">
-  <button id="addProfileButton">Agregar Perfil</button>
-  
-  <!-- Botón para crear nuevo perfil de navegación -->
-  <div id="newProfileSection" style="display: none;">
-    <input type="text" id="profileNameInput" placeholder="Nombre del Perfil">
-    <button id="addNavigationProfileButton">Crear nuevo perfil de navegación</button>
-    <div id="profileError"></div>
-  </div>
+                <div class="card-form" style="display:flex; min-width: 80%;">
+                    <!-- Campo de entrada para el nombre del perfil de navegación -->
+<!-- Inputs -->
+<input class="mr-1" type="text" id="navigationProfileNameInput" placeholder="Nombre del nuevo perfil">
+<input class="mr-1" type="text" id="navigationProfilePasswordInput" placeholder="Contraseña">
+<input type="hidden" id="navigationProfileAvatarURL">
+<button id="addProfileButton" class="btn btn-primary verde">Agregar Perfil</button>
 
-  
+<!-- Modal -->
+<div class="modal" id="avatarModal" tabindex="-1" role="dialog" style="display: none;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-container">
+                    <h5 class="modal-title">Selecciona un Avatar</h5>
+                </div>
+                <button type="button" class="close" id="closeModalButton" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="avatar-selection">
+                    <img src="images/avatar1.png" alt="Avatar 1" class="avatar-option">
+                    <img src="images/avatar2.png" alt="Avatar 2" class="avatar-option">
+                    <img src="images/avatar3.png" alt="Avatar 3" class="avatar-option">
+                    <img src="images/avatar4.png" alt="Avatar 4" class="avatar-option">
+                    <img src="images/avatar5.png" alt="Avatar 5" class="avatar-option">
+                    <img src="images/avatar6.png" alt="Avatar 6" class="avatar-option">
+                    <img src="images/avatar7.png" alt="Avatar 7" class="avatar-option">
+                    <img src="images/avatar8.png" alt="Avatar 8" class="avatar-option">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="createProfileButton" class="btn btn-primary">Crear Perfil</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-  <script src="perfiles.js"></script>
+    
+                    <!-- Botón para crear nuevo perfil de navegación -->
+                    <!-- <div id="newProfileSection" style="display: none;">
+                        <input type="text" id="profileNameInput" placeholder="Nombre del Perfil">
+                        <input type="text" id="profilePasswordInput" placeholder="Contraseña">
+                        <input type="text" id="profileAvatarURL" placeholder="URL de la imagen del avatar">
+                        <button id="addNavigationProfileButton" class="btn btn-primary">Crear nuevo perfil de navegación</button>
+                        <div id="profileError"></div>
+                    </div> -->
+                </div>
+                <canvas id="starfield"></canvas>
+                <script src="starfield.js"></script>
+                <script src="perfiles.js"></script>
+                <!-- Script para manejar la lógica de la página -->
+                <script src="panel.js"></script>
+
 </body>
 </html>

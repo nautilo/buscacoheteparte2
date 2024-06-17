@@ -320,12 +320,20 @@ async function showNavigationProfiles() {
 
         // Iterar sobre cada perfil de navegación y crear elementos para mostrarlos en la lista
         navigationProfiles.forEach(profile => {
-            const profileItem = document.createElement("li");
-            profileItem.textContent = profile.name;
+            const card = document.createElement("div");
+            card.classList.add("card-perfil");
 
-            // Botones para cada perfil
+            // Suponiendo que cada perfil tiene una imagen asociada
+            const profileImage = profile.avatarURL || "default_profile_image.jpg"; // Imagen por defecto si no hay imagen en el perfil
+
+            card.innerHTML = `
+                <img src="${profileImage}" alt="${profile.name}">
+                <h3 style="color:black;">${profile.name}</h3>
+            `;
+
             const setAsActiveButton = document.createElement("button");
             setAsActiveButton.textContent = "Establecer como activo";
+            setAsActiveButton.classList.add("btn", "btn-primary");
             setAsActiveButton.addEventListener("click", async function () {
                 try {
                     await setUserActiveProfile(currentUser, profile); // Establecer como activo
@@ -360,29 +368,29 @@ async function showNavigationProfiles() {
             });
 
             const editButton = document.createElement("button");
-editButton.textContent = "Editar";
-editButton.addEventListener("click", async function () {
-    const newName = prompt("Ingrese el nuevo nombre para el perfil:", profile.name);
-    if (newName !== null) {
-        const newPassword = prompt("Ingrese la nueva contraseña para el perfil:");
-        // Check if newPassword is not null and not an empty string
-        if (newPassword !== null && newPassword.trim() !== "") {
-            try {
-                await updateProfile(currentUser, profile.name, newName, newPassword); // Editar el perfil
-                await showNavigationProfiles(); // Actualizar la lista de perfiles
-            } catch (error) {
-                console.error("Error al editar el perfil:", error);
-                alert("Error al editar el perfil. Inténtalo de nuevo más tarde.");
-            }
-        } else {
-            // Handle case where password is empty or cancelled
-            alert("La contraseña no puede estar vacía.");
-        }
-    }
-});
+            editButton.textContent = "Editar";
+            editButton.classList.add("btn", "btn-secondary");
+            editButton.addEventListener("click", async function () {
+                const newName = prompt("Ingrese el nuevo nombre para el perfil:", profile.name);
+                if (newName !== null) {
+                    const newPassword = prompt("Ingrese la nueva contraseña para el perfil:");
+                    if (newPassword !== null && newPassword.trim() !== "") {
+                        try {
+                            await updateProfile(currentUser, profile.name, newName, newPassword); // Editar el perfil
+                            await showNavigationProfiles(); // Actualizar la lista de perfiles
+                        } catch (error) {
+                            console.error("Error al editar el perfil:", error);
+                            alert("Error al editar el perfil. Inténtalo de nuevo más tarde.");
+                        }
+                    } else {
+                        alert("La contraseña no puede estar vacía.");
+                    }
+                }
+            });
 
             const deleteButton = document.createElement("button");
             deleteButton.textContent = "Eliminar";
+            deleteButton.classList.add("btn", "btn-danger");
             deleteButton.addEventListener("click", async function () {
                 if (confirm("¿Estás seguro de que deseas eliminar este perfil?")) {
                     try {
@@ -397,6 +405,7 @@ editButton.addEventListener("click", async function () {
 
             const goToBlockPanelButton = document.createElement("button");
             goToBlockPanelButton.textContent = "Ir a panel de bloqueo";
+            goToBlockPanelButton.classList.add("btn", "btn-info");
             goToBlockPanelButton.addEventListener("click", async function () {
                 const currentUser = await getCurrentUser(); // Obtener el usuario actual
                 if (currentUser) {
@@ -406,14 +415,14 @@ editButton.addEventListener("click", async function () {
                 }
             });
 
-            // Agregar los botones al elemento del perfil
-            profileItem.appendChild(setAsActiveButton);
-            profileItem.appendChild(editButton);
-            profileItem.appendChild(deleteButton);
-            profileItem.appendChild(goToBlockPanelButton);
+            // Agregar los botones al card del perfil
+            card.appendChild(setAsActiveButton);
+            card.appendChild(editButton);
+            card.appendChild(deleteButton);
+            card.appendChild(goToBlockPanelButton);
 
-            // Agregar el elemento del perfil a la lista
-            navigationProfileList.appendChild(profileItem);
+            // Agregar el card del perfil al contenedor de perfiles
+            navigationProfileList.appendChild(card);
         });
     } catch (error) {
         console.error("Error al obtener los perfiles de navegación:", error);
@@ -516,33 +525,100 @@ async function deleteNavigationProfile(username, profileName) {
     }
 }
 
+///
+document.addEventListener('DOMContentLoaded', async function () {
+    await showWelcomeMessage();
+    await showNavigationProfiles();
 
+    const addProfileButton = document.getElementById('addProfileButton');
+    const createProfileButton = document.getElementById('createProfileButton');
+    const closeModalButton = document.getElementById('closeModalButton');
+    const closeModalFooterButton = document.getElementById('closeModalFooterButton');
+    const avatarModal = document.getElementById('avatarModal');
+    const avatarOptions = document.querySelectorAll('.avatar-option');
+    let selectedAvatarURL = '';
 
-// Función para agregar un nuevo perfil de navegación
-// Función para agregar un nuevo perfil de navegación asegurándose de que no exista otro con el mismo nombre
-async function addNavigationProfile(username, profileName) {
+    if (addProfileButton) {
+        addProfileButton.addEventListener('click', function () {
+            avatarModal.style.display = 'block';
+        });
+    }
+
+    if (closeModalButton) {
+        closeModalButton.addEventListener('click', function () {
+            avatarModal.style.display = 'none';
+        });
+    }
+
+    if (closeModalFooterButton) {
+        closeModalFooterButton.addEventListener('click', function () {
+            avatarModal.style.display = 'none';
+        });
+    }
+
+    avatarOptions.forEach(avatar => {
+        avatar.addEventListener('click', function () {
+            selectedAvatarURL = this.src;
+            avatarOptions.forEach(av => av.classList.remove('selected'));
+            this.classList.add('selected');
+        });
+    });
+
+    if (createProfileButton) {
+        createProfileButton.addEventListener('click', async function (event) {
+            const profileNameInput = document.getElementById('navigationProfileNameInput');
+            const profilePasswordInput = document.getElementById('navigationProfilePasswordInput');
+            const profileAvatarURLInput = document.getElementById('navigationProfileAvatarURL');
+
+            const profileName = profileNameInput.value.trim();
+            const profilePassword = profilePasswordInput.value.trim();
+
+            if (!profileName || !profilePassword || !selectedAvatarURL) {
+                console.error("Todos los campos son obligatorios");
+                return; // Detener la ejecución si algún campo está vacío
+            }
+
+            profileAvatarURLInput.value = selectedAvatarURL;
+            const currentUser = await getCurrentUser();
+            try {
+                const success = await addNavigationProfile(currentUser, profileName, profilePassword, selectedAvatarURL);
+                if (success) {
+                    await showNavigationProfiles();
+                    await showWelcomeMessage();
+                    profileNameInput.value = '';
+                    profilePasswordInput.value = '';
+                    profileAvatarURLInput.value = '';
+                    selectedAvatarURL = '';
+                    avatarModal.style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error al agregar un nuevo perfil de navegación:", error);
+            }
+        });
+    }
+});
+
+async function addNavigationProfile(username, profileName, password, avatarURL) {
     try {
-        // Primero, verifica si ya existe un perfil con el mismo nombre para evitar hacer la petición si no es necesario
         const existingProfiles = await getNavigationProfiles(username);
         const isDuplicate = existingProfiles.some(profile => profile.name === profileName);
 
         if (isDuplicate) {
             chrome.notifications.create({
                 type: 'basic',
-                iconUrl: 'icon.png', // Asegúrate de tener un icono válido aquí
+                iconUrl: 'icon.png',
                 title: 'Error de Duplicado',
                 message: 'No puedes tener 2 perfiles de navegación con el mismo nombre.'
             });
-            return false; // Detener la ejecución si el perfil ya existe
+            return false;
         }
 
-        // Si no hay duplicados, procede a agregar el nuevo perfil
         const response = await fetch(`http://localhost:3000/add-navigation-profile/${username}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name: profileName })
+            body: JSON.stringify({ name: profileName, password, avatarURL })
         });
         const data = await response.json();
 
@@ -570,42 +646,7 @@ async function addNavigationProfile(username, profileName) {
     }
 }
 
-
-
-
-document.addEventListener('DOMContentLoaded', async function () {
-    // Mostrar el mensaje de bienvenida con el perfil activo
-    await showWelcomeMessage();
-
-    // Mostrar los perfiles de navegación existentes
-    await showNavigationProfiles();
-
-    // Asegurarse de que el evento de clic se asocie correctamente
-    const addProfileButton = document.getElementById('addProfileButton');
-    if (addProfileButton) {
-        addProfileButton.addEventListener('click', async function (event) {
-            const profileNameInput = document.getElementById('navigationProfileNameInput');
-            const profileName = profileNameInput.value.trim();
-            if (!profileName) {
-                console.error("El nombre del perfil no puede estar vacío");
-                return; // Detener la ejecución si el campo está vacío
-            }
-
-            const currentUser = await getCurrentUser();
-            try {
-                const success = await addNavigationProfile(currentUser, profileName); // Agregar el nuevo perfil
-                if (success) {
-                    await showNavigationProfiles(); // Actualizar la lista de perfiles de navegación
-                    await showWelcomeMessage(); // Mostrar el mensaje de bienvenida actualizado
-                    profileNameInput.value = ''; // Limpiar el input después de agregar el perfil
-                }
-            } catch (error) {
-                console.error("Error al agregar un nuevo perfil de navegación:", error);
-            }
-        });
-    }
-});
-
+///
 function showActiveProfileFromConsole() {
     // Intenta obtener el username y el profileName del localStorage
     const username = localStorage.getItem('currentUser');
@@ -636,53 +677,5 @@ async function getNavigationProfiles(username) {
     }
 }
 
-async function addNavigationProfile(username, profileName) {
-    try {
-        // Primero, verifica si ya existe un perfil con el mismo nombre para evitar hacer la petición si no es necesario
-        const existingProfiles = await getNavigationProfiles(username);
-        const isDuplicate = existingProfiles.some(profile => profile.name === profileName);
 
-        if (isDuplicate) {
-            chrome.notifications.create({
-                type: 'basic',
-                iconUrl: 'icon.png',
-                title: 'Error de Duplicado',
-                message: 'No puedes tener 2 perfiles de navegación con el mismo nombre.'
-            });
-            return false; // Detener la ejecución si el perfil ya existe
-        }
-
-        // Si no hay duplicados, procede a agregar el nuevo perfil
-        const response = await fetch(`http://localhost:3000/add-navigation-profile/${username}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: profileName })
-        });
-        const data = await response.json();
-
-        if (response.ok) {
-            console.log("Nuevo perfil de navegación agregado exitosamente.");
-            chrome.notifications.create({
-                type: 'basic',
-                iconUrl: 'icon.png',
-                title: 'Perfil Agregado',
-                message: 'Nuevo perfil de navegación agregado exitosamente.'
-            });
-            return true;
-        } else {
-            throw new Error(data.message);
-        }
-    } catch (error) {
-        console.error("Error al agregar un nuevo perfil de navegación:", error);
-        chrome.notifications.create({
-            type: 'basic',
-            iconUrl: 'icon.png',
-            title: 'Error',
-            message: "Error al agregar un nuevo perfil de navegación: " + error.message
-        });
-        throw error;
-    }
-}
 

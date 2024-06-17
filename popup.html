@@ -4,65 +4,54 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BuscaCohete</title>
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="estilo-popup.css">
 </head>
 <body>
-  <!-- Agregar un elemento para mostrar el perfil activo -->
-  <div id="activeProfileSection">
-    <h2>Perfil Activo:</h2>
-    <p id="activeProfileName">Cargando...</p>
-  </div>
-
   <div id="popupContainer">
     <div id="contenedorLogin">
       <div id="childLoginForm" style="display: block;">
-        <h1>¿Cuál es tu nombre?</h1>
-        <form id="childLogin">
-          <select id="childProfile">
-            <option value="invitado">Ingresar como invitado</option>
-            <option value="perfil1">Perfil 1</option>
-            <option value="perfil2">Perfil 2</option>
-          </select>
-          <input type="password" id="childPassword" placeholder="Contraseña" style="display: none;">
-          <input type="submit" value="Despegar">
-        </form>
+        <img src="./icon.png" alt="logo" style="height:100px;">
+        <h2>¿Cuál es tu nombre?</h2>
+        <div id="profileCards" class="row">
+          <!-- Aquí se agregarán dinámicamente las cards -->
+        </div>
+        <input type="password" id="childPassword" placeholder="Contraseña" style="display: none; margin: 20px auto;">
+        <input class="btn btn-primary btndespegar" type="submit" value="Despegar">
       </div>
 
       <div id="loginForm" style="display: none;">
-        <h1>Iniciar sesión</h1>
+        <img src="./supervisor-icon.png" alt="icono-supervisor" style="height:100px;">
+        <h2>Iniciar sesión</h2>
+        <p style="color:rgb(170, 170, 170);">(Cuenta de supervisor)</p>
         <form id="login">
           <input type="text" id="username" placeholder="Usuario">
           <input type="password" id="password" placeholder="Contraseña">
-          <input type="submit" value="Iniciar sesión">
+          <input class="btn btn-primary verde" type="submit" value="Iniciar sesión">
         </form>
         <div id="result"></div>
       </div>
 
-      <!-- Enlace para redirigir al formulario de registro -->
-      <div class="registro-link">
-        <a href="registro.html">¿No tienes una cuenta? Regístrate aquí.</a>
+      <div id="forgotPasswordLink" class="forgot-password-link" style="display:none;">
+        <a href="forgot-password.html">¿Olvidaste tu contraseña?</a>
+      </div>
+      
+      <div id="registroLink" class="registro-link" style="display:none;">
+        <a href="registro.html">Crear tu cuenta aquí</a>
       </div>
 
       <div id="blockedWebsitesDiv"></div>
 
-      <!-- Enlace para redirigir al formulario de recuperación de contraseña -->
-      <div class="forgot-password-link">
-        <a href="forgot-password.html">¿Olvidaste tu contraseña?</a>
-      </div>
-      
-      <!-- Enlace para iniciar sesión como supervisor -->
       <div id="supervisorLink">
         <a href="#" id="loginSupervisor">Iniciar sesión como supervisor</a>
       </div>
       
-      <!-- Enlace para volver al inicio de sesión para niños -->
       <div id="backLink" style="display: none;">
         <a href="#" id="backToChildLogin">Atrás</a>
       </div>
     </div>
   </div>
 
-  <!-- Cargar el archivo JavaScript -->
   <script src="popup.js" defer></script>
 </body>
 </html>

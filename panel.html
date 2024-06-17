@@ -1,72 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Panel de Bloqueo</title>
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
-
-  <!-- font awesome style -->
-  <link href="css/font-awesome.min.css" rel="stylesheet" />
-
-  <!-- Custom styles for this template -->
-  <link href="css/style.css" rel="stylesheet" />
-  <!-- responsive style -->
-  <link href="css/responsive.css" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuscaCohete - Panel del supervisor</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="panel2.css">
+    <style>
+        /* Estilo para hacer que el contenedor se extienda al 100% de la altura */
+        .full-height {
+            height: 100vh;
+        }
+        .navegacion {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 25%;
+            overflow-y: hidden;
+        }
+        .contenedor {
+            margin-left: 25%;
+            padding: 20px;
+            height: 100vh;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
-  <h1>Panel de Supervisión</h1>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Panel izquierdo -->
+            <div class="col-md-3 col-sm-6 text-light py-4 full-height d-flex flex-column navegacion">
+                <div class="text-center">
+                    <img src="./images/icon16.png" alt="Logo" width="100">
+                    <h4 id="title" class="mt-3">BuscaCohete</h4>
+                </div>
+                <hr class="bg-light">
+                <ul class="nav flex-column flex-grow-1">
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="#" id="supervisadosLink">Ver usuarios supervisados</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="#sitios-bloqueados">Sitios bloqueados</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="#">Palabras bloqueadas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="#">Historial</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="#" id="graficosLink">Gráficos y estadísticas</a>
+                    </li>
+                </ul>
+                <button class="btn btn-danger mt-3">Cerrar sesión</button>
+            </div>
+            <!-- Contenido principal -->
+            <div class="col-md-9 col-sm-6 contenedor">
+                <h1>Panel de Supervisión</h1>
 
-  <!-- Mostrar el nombre del perfil y el nombre de usuario -->
-  <h2 id="profileName"></h2>
-  <br>
+                <!-- Mostrar el nombre del perfil y el nombre de usuario -->
+                <h2 id="profileName"></h2>
+                <br>
+                <div id="sitios-bloqueados">
+                    <!-- Lista de URLs bloqueadas -->
+                    <h3>Sitios bloqueados:</h3>
+                    <ul id="blockedUrlsList">
+                        <!-- Aquí se mostrarán las URLs bloqueadas -->
+                    </ul>
 
-  <!-- Lista de URLs bloqueadas -->
-  <h3>Bloqueo por URL:</h3>
-  <ul id="blockedUrlsList">
-    <!-- Aquí se mostrarán las URLs bloqueadas -->
-  </ul>
+                    <!-- Formulario para agregar una nueva URL bloqueada -->
+                    <div class="container mt-1">
+                        <div class="card">
+                            <div class="card-header">
+                                Bloquear URL
+                            </div>
+                            <div class="card-body">
+                                <form id="addBlockedUrlForm">
+                                    <div class="form-group">
+                                        <label for="blockedUrlInput">Coloque la URL que desee bloquear</label>
+                                        <input type="text" class="form-control" id="blockedUrlInput" placeholder="http://example.com">
+                                    </div>
+                                    <button class="btn btn-primary" type="submit" id="bloquearUrlBtn">Bloquear URL</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
 
-  <!-- Formulario para agregar una nueva URL bloqueada -->
-    <form id="addBlockedUrlForm">
-      <input type="text" id="blockedUrlInput" placeholder="Coloque la URL que desee bloquear">
-      <button type="submit" id="bloquearUrlBtn">Bloquear URL</button>
-    </form>
-    <br>
-  <!-- Sección para buscar URLs por tema -->
-  <h3>Bloqueo por Tema:</h3>
-  <div id="searchSection">
-    <input type="text" id="searchInput" placeholder="Ingrese un tema para buscar páginas relacionadas">
-    <br><br>
-    <button id="searchButton">Buscar</button>
-  </div>
+                    <!-- Sección para buscar URLs por tema -->
+                    <div class="container mt-1">
+                        <div class="card">
+                            <div class="card-header">
+                                Bloqueo por Tema
+                            </div>
+                            <div class="card-body">
+                                <div id="searchSection">
+                                    <div class="form-group">
+                                        <label for="searchInput">Ingrese un tema para buscar páginas relacionadas</label>
+                                        <input type="text" class="form-control" id="searchInput" placeholder="Ingrese un tema">
+                                    </div>
+                                    <button class="btn btn-primary" id="searchButton">Buscar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-  <!-- Sección para mostrar los resultados -->
-  <div id="searchResults"></div>
-    
-    <br><br>
+                    <!-- Sección para mostrar los resultados -->
+                    <div id="searchResults"></div>
+                </div>
 
+                <div id="navigationHistoryPanel">
+                    <h3>Historial de Navegación</h3>
+                    <div id="navigationHistoryContainer"></div>
+                    <div id="paginationContainer"></div>
+                </div>
 
-    <div id="navigationHistoryPanel">
-      <h3>Historial de Navegación</h3>
-      <div id="navigationHistoryContainer"></div>
-      <div id="paginationContainer"></div>
-  </div>
-  <br><br>
-  <h3>Bloqueo de palabras</h3>
-  <p>
-    Ingresar palabra: <input type="text" id="new_word" value=""/>
-    <br><br>
-    <button type="submit">Ingresar</button>
-
-    <!-- <input id="submit" type="button" value="Ingresar"/> -->
-    <!-- <input id="delete" type="button" value="Borrar"/> -->
-  </p>
-  <ul id = "list"></ul>
-
-  <!-- Script para manejar la lógica de la página -->
-  <script src="panel.js"></script>
-  
+                <div id="palabras-bloqueadas">
+                  <div class="container mt-1">
+                    <div class="card">
+                        <div class="card-header">
+                            Bloqueo de Palabras
+                        </div>
+                        <div class="card-body">
+                            <h3>Bloqueo de palabras</h3>
+                            <form>
+                                <div class="form-group">
+                                    <label for="new_word">Ingresar palabra:</label>
+                                    <input type="text" class="form-control" id="new_word" placeholder="Ingrese una palabra">
+                                </div>
+                                <button class="btn btn-primary" type="submit">Ingresar</button>
+                            </form>
+                            <ul id="list"></ul>
+                        </div>
+                    </div>
+                </div>
+                    <ul id="list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Script para manejar la lógica de la página -->
+    <script src="panel.js"></script>
+    <script src="navegacion.js"></script>
 </body>
 </html>
