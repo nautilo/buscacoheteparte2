@@ -12,7 +12,7 @@ h1, h2, h3, h4, p {
 }
 
 a {
-  color: #06c;
+  color: #007BFF;
   text-decoration: none;
 }
 
@@ -96,4 +96,37 @@ input[type="text"], input[type="url"] {
 
 .alert-warning {
   background-color: #ff9800; /* Orange */
+}
+
+/* Contenedores de gráficos */
+.chart-container {
+  width: 80%;
+  max-width: 900px;
+  margin: 20px 0;
+  background-color: #fff;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.chart-container:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+canvas {
+  width: 100% !important;
+  height: 450px !important;
+}
+
+@media (max-width: 600px) {
+  .chart-container {
+    width: 95%;
+    padding: 15px;
+  }
+
+  canvas {
+    height: 300px !important;
+  }
 }

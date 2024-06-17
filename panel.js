@@ -1,3 +1,4 @@
+
 let username;
 let activeProfile;
 
@@ -35,6 +36,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Mostrar el historial de navegación
     await showNavigationHistory(username, activeProfile);
+
+    
 
     // Fetching navigation data
     fetchNavigationData(username, activeProfile);
@@ -172,13 +175,7 @@ async function addNavigationHistory(username, profileName, title, url) {
 
 
 
-// Función para desbloquear una URL
 
-
-// Función para mostrar el historial de navegación
-// Función para mostrar el historial de navegación con paginación
-// Función para mostrar el historial de navegación con paginación
-// Función para mostrar el historial de navegación con paginación
 async function showNavigationHistory(username, profileName, page = 1, pageSize = 10) {
     const navigationHistoryContainer = document.getElementById('navigationHistoryContainer');
     navigationHistoryContainer.innerHTML = ""; // Limpiar el contenedor antes de mostrar nuevos resultados
@@ -454,8 +451,10 @@ async function fetchNavigationData(username, profileName) {
         if (result.success) {
             const navigationData = result.data;
             
-            // Filtrar las URLs de Google
-            const filteredData = navigationData.filter(item => !item.url.includes("google.com"));
+            // Filtrar las URLs de Google y extensiones de Chrome
+            const filteredData = navigationData.filter(item => 
+                !item.url.includes("google.com") && !item.url.startsWith("chrome-extension://")
+            );
             
             // Obtener hostnames de las URLs filtradas
             const urls = filteredData.map(item => new URL(item.url).hostname); 
@@ -469,12 +468,21 @@ async function fetchNavigationData(username, profileName) {
             console.log(visitedAt);
             console.log(lastVisitedAt);
 
-            renderBarChart(urls, visitCounts);
-            renderPieChart(urls, visitCounts);
-            const mostVisitedSite = obtenerSitioMasVisitado(urls, visitCounts);
-            mostrarSitioMasVisitado(mostVisitedSite);
+            // Obtener las 10 URLs más visitadas
+            const sortedData = filteredData.sort((a, b) => b.visitCount - a.visitCount).slice(0, 10);
+            const topUrls = sortedData.map(item => new URL(item.url).hostname);
+            const topVisitCounts = sortedData.map(item => item.visitCount);
+            const topVisitedAt = sortedData.map(item => new Date(item.visitedAt));
+            const topLastVisitedAt = sortedData.map(item => new Date(item.lastVisitedAt));
 
-            renderTimeChart(urls, visitedAt, lastVisitedAt); // Llamar a la función con las fechas convertidas
+            renderBarChart(topUrls, topVisitCounts);
+            renderPieChart(topUrls, topVisitCounts);
+            const mostVisitedSite = obtenerSitioMasVisitado(topUrls, topVisitCounts);
+            mostrarSitioMasVisitado(mostVisitedSite);
+            renderTimeChart(topUrls, topVisitedAt, topLastVisitedAt);
+            
+            // Llamar a la función renderScatterPlot aquí
+            renderScatterPlot(topUrls, topVisitCounts, topVisitedAt);
         } else {
             console.error('Error al obtener los datos del gráfico');
         }
@@ -483,67 +491,79 @@ async function fetchNavigationData(username, profileName) {
     }
 }
 
+
+
 function renderTimeChart(urls, visitedAt, lastVisitedAt) {
     const ctx = document.getElementById('timeChart').getContext('2d');
     console.log('Rendering time chart with visitedAt:', visitedAt);
     console.log('Rendering time chart with lastVisitedAt:', lastVisitedAt);
 
-    // Procesa los datos de fecha si es necesario
     const visitDates = visitedAt.map(date => new Date(date));
     let lastVisitDates = [];
     if (lastVisitedAt) {
         lastVisitDates = lastVisitedAt.map(date => new Date(date));
     } else {
-        // Si lastVisitedAt no está definido, usa un array vacío para evitar errores
         lastVisitDates = new Array(visitedAt.length).fill(new Date());
     }
 
     console.log('Processed visit dates:', visitDates);
     console.log('Processed last visit dates:', lastVisitDates);
 
-    // Calcula la diferencia de tiempo entre visitas y última visita para cada sitio
     const timeDifferences = visitDates.map((visitDate, index) => {
         const lastVisitDate = lastVisitDates[index];
-        return Math.abs(visitDate - lastVisitDate); // Calcula la diferencia absoluta en milisegundos
+        return Math.abs(visitDate - lastVisitDate);
     });
 
-    // Convierte la diferencia de tiempo a la unidad deseada (por ejemplo, días)
-    const timeDifferencesInDays = timeDifferences.map(diff => Math.ceil(diff / (1000 * 60 * 60 * 24))); // Convierte a días y redondea hacia arriba
+    const timeDifferencesInDays = timeDifferences.map(diff => Math.ceil(diff / (1000 * 60 * 60 * 24)));
 
     console.log('Time differences between visits and last visits (in days) for all sites:', timeDifferencesInDays);
 
-    // Crea un mapeo entre las URLs y los colores
     const urlColorMap = {};
-    const uniqueUrls = [...new Set(urls)]; // Obtiene URLs únicas
-    const colors = generateRandomColors(uniqueUrls.length); // Genera colores aleatorios
+    const uniqueUrls = [...new Set(urls)];
+    const colors = generateRandomColors(uniqueUrls.length);
     uniqueUrls.forEach((url, index) => {
-        urlColorMap[url] = colors[index]; // Asigna un color a cada URL
+        urlColorMap[url] = colors[index];
     });
+
+    // limitar a las 10 mas visitadas
+    const topUrls = urls.slice(0, 10);
+    const topTimeDifferencesInDays = timeDifferencesInDays.slice(0, 10);
+    const topVisitDates = visitDates.slice(0, 10);
 
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: visitDates.map((date, index) => date.toLocaleDateString()), // Usa solo la fecha como etiquetas
-            datasets: urls.map((url, index) => ({
+            labels: topVisitDates.map(date => date.toLocaleDateString()), // Mostrar la fecha en el eje x
+            datasets: topUrls.map((url, index) => ({
                 label: url,
-                data: [timeDifferencesInDays[index]], // Usa las diferencias de tiempo en días
+                data: [topTimeDifferencesInDays[index]],
                 borderColor: urlColorMap[url],
                 borderWidth: 1,
                 fill: false,
                 pointLabel: {
                     formatter: function(context) {
                         const dataIndex = context.dataIndex;
-                        return urls[dataIndex]; // Muestra la URL como etiqueta del punto
+                        return `Días entre visita y última visita: ${topTimeDifferencesInDays[dataIndex]} días`; // Mostrar la diferencia en días al pasar el puntero sobre los puntos
                     }
                 }
             }))
         },
         options: {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Días entre la primera y última visita', // Título del gráfico
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                }
+            },
             scales: {
                 x: {
-                    type: 'time', // Configura el eje X como tipo de tiempo
+                    type: 'time',
                     time: {
-                        unit: 'day' // Configura la unidad de tiempo
+                        unit: 'day'
                     }
                 },
                 y: {
@@ -571,24 +591,27 @@ function generateRandomColors(count) {
     return colors;
 }
 
-
-
-
-
-
-
 function renderBarChart(urls, visitCounts) {
     const ctx = document.getElementById('navigationBarChart').getContext('2d');
     console.log('Rendering bar chart with URLs:', urls);
     console.log('Rendering bar chart with visit counts:', visitCounts);
+
+    // Combine URLs and visit counts
+    const combined = urls.map((url, index) => ({ url, count: visitCounts[index] }));
+    // Sort by visit counts in descending order and get top 10
+    combined.sort((a, b) => b.count - a.count);
+    const topCombined = combined.slice(0, 10);
+
+    const topUrls = topCombined.map(item => item.url);
+    const topVisitCounts = topCombined.map(item => item.count);
     
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: urls,
+            labels: topUrls,
             datasets: [{
                 label: 'Visitas',
-                data: visitCounts,
+                data: topVisitCounts,
                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1
@@ -609,34 +632,33 @@ function renderBarChart(urls, visitCounts) {
     });
 }
 
+
 function renderPieChart(urls, visitCounts) {
     const ctx = document.getElementById('navigationPieChart').getContext('2d');
     console.log('Rendering pie chart with URLs:', urls);
     console.log('Rendering pie chart with visit counts:', visitCounts);
-    
+
+    // Combine URLs and visit counts
+    const combined = urls.map((url, index) => ({ url, count: visitCounts[index] }));
+    // Sort by visit counts in descending order and get top 10
+    combined.sort((a, b) => b.count - a.count);
+    const topCombined = combined.slice(0, 10);
+
+    const topUrls = topCombined.map(item => item.url);
+    const topVisitCounts = topCombined.map(item => item.count);
+
+    // Calcular porcentajes
+    const totalVisits = topVisitCounts.reduce((acc, cur) => acc + cur, 0);
+    const percentages = topVisitCounts.map(count => ((count / totalVisits) * 100).toFixed(2) + '%');
+
     new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: urls, // Utilizar los nombres de los sitios como etiquetas
+            labels: topUrls.map((url, index) => `${url} (${percentages[index]})`),
             datasets: [{
                 label: 'Visitas',
-                data: visitCounts,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
+                data: topVisitCounts,
+                backgroundColor: generateRandomColors(topUrls.length),
                 borderWidth: 1
             }]
         },
@@ -653,18 +675,28 @@ function renderPieChart(urls, visitCounts) {
     });
 }
 
+
 function renderChart(urls, visitCounts) {
     const ctx = document.getElementById('navigationChart').getContext('2d');
-    console.log('Rendering chart with URLs:', urls); // Verifica URLs
-    console.log('Rendering chart with visit counts:', visitCounts); // Verifica contadores de visitas
+    console.log('Rendering chart with URLs:', urls);
+    console.log('Rendering chart with visit counts:', visitCounts);
+
+    // Combine URLs and visit counts
+    const combined = urls.map((url, index) => ({ url, count: visitCounts[index] }));
+    // Sort by visit counts in descending order and get top 10
+    combined.sort((a, b) => b.count - a.count);
+    const topCombined = combined.slice(0, 10);
+
+    const topUrls = topCombined.map(item => item.url);
+    const topVisitCounts = topCombined.map(item => item.count);
     
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: urls,
+            labels: topUrls,
             datasets: [{
                 label: 'Visitas',
-                data: visitCounts,
+                data: topVisitCounts,
                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1
